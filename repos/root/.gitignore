@@ -1,11 +1,12 @@
 
-node_modules
+    node_modules
 
-.next
+    .next
 
-yarn.lock
+    yarn.lock
 
-yarn-error.log
+    yarn-error.log
 
-.DS_Store
+    .DS_Store
 
+    .DS_store

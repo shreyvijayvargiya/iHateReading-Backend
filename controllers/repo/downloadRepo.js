@@ -19,16 +19,9 @@ function createFile(pathname, filename, content){
         console.log(`File ${filename} added in ${pathname} successfully`)
     });
 };
-function installDependencies(dependencies){
-    const filePath = path.join(process.cwd() + '/repos/' + package.json);
-    dependencies.forEach(packageName => {
-        child_process(`cd ${filePath} && yarn add ${packageName}`)
-    });
-}
 
 const downloadRepo = async (req, res) => {
     const { tree, userId } = req.body;
-    console.log(tree, "tree");
     const { isUserValid } = await checkUserValidity(userId);
     if(!isUserValid){
         res.send("User not found, please login to continue");

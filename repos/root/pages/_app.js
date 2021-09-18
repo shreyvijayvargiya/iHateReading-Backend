@@ -1,12 +1,21 @@
 
-import React from 'react';
+    import React from 'react';
 
-const MyApp = ({ Component, pageProps }) => {
-    return (
-        <div>
-            <Component {...pageProps} />
-        </div>
-    );
-};
-export default MyApp;
+    import { ThemeProvider } from '@material-ui/core/styles';
+
+
+
+    const MyApp = ({ Component, pageProps }) => {
+
+        return (
+
+            <ThemeProvider>
+                <Component {...pageProps} />
+            </ThemeProvider>
+
+        );
+
+    };
+
+    export default MyApp;
 
