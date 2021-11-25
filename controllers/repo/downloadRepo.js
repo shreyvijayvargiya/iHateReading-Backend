@@ -74,7 +74,7 @@ const downloadRepo = async (req, res) => {
 };
 
 const createSandboxTreeFromRepoTree = async(req, res) => {
-    const data = req.body;
+    const data = req.body.repoTree;
     let response = {
         error: '',
         message: '',
