@@ -1,3 +1,1 @@
-## Backend servers for iHateReading website
-
-<a href="www.ihatereading.in" target="_blank">Website</a>
+## This is the best and basic Express server setup 
