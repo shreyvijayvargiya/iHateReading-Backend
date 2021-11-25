@@ -7,10 +7,9 @@ const cors = require("cors");
 const admin = require('firebase-admin');
 const mustacheExpress = require("mustache-express");
 
-
 dotenv.config();
 
-const passport = require('./middlewares/passportMiddleware');
+// const passport = require('./middlewares/passportMiddleware');
 const server = express();
 server.use(bodyParser.json());
 server.use(bodyParser.urlencoded({ extended: true }));
@@ -20,7 +19,7 @@ server.use(cors("*"));
 server.engine("html", mustacheExpress());
 server.set("view engine", "html");
 server.set("views", './views');
-server.use(passport.initialize());
+// server.use(passport.initialize());
 
 admin.initializeApp({
     credential: admin.credential.cert("./service-account-file.json"),

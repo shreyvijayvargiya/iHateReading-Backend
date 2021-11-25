@@ -45,7 +45,7 @@ githubRouter.get("/getrepo",async (req, res) => {
     }
 });
 
-githubRouter.post("/v1/api/github/create-repository", createRepository);
+githubRouter.post("/v1/api/github/create-repository", (req, res) => createRepository(req, res));
 
 githubRouter.get('/create-repo', async(req, res) => {
     shellJs.cd(process.cwd() + '/repos/root');
