@@ -24,7 +24,7 @@ router.get('/auth/google/callback', passport.authenticate('google', { failureRed
 });
 
 router.get('/v1/custom-repo', (req, res) => res.send('New Custom Repo API '))
-router.get('/v1/deploy-custom-repo', (req, res) => createSandboxTreeFromRepoTree(req, res));
+router.post('/v1/deploy-custom-repo', (req, res) => createSandboxTreeFromRepoTree(req, res));
 
 module.exports = router;
 
