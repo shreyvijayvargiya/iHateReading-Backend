@@ -81,47 +81,62 @@ const createSandboxTreeFromRepoTree = async(req, res) => {
         data: '',
         status: ''
     };
-    let directories = [];
-    let files = [];
-    function walkTree(tree){
-        tree.map(item => {
-            if(Array.isArray(item.children)){
-                directories.push(item);
-                walkTree(item.children);
-                return
-            }else {
-                files.push(item)
-                return
-            }
-        });
-    };
-    walkTree(data.children);
-    const sandBoxTree = {};
-    try {
-        files.map(item => {
-            const splitArrayLength = (item.path).split('/').length;
-            const joinPath = ((item.path).split('/')).slice(1, splitArrayLength).join('/');
-            sandBoxTree[joinPath] = { 'content': item.content };
-        });
-        const body = { "files": { ...sandBoxTree }};
-        await axios.post(process.env.CODE_SANDBOX_API, body, { headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        }}).then(resp => {
-            // path will the name and content will be content
-    
-            // Check if repository already deployed else  
-            // Add sandbox url to firebase database 
-            response.data = resp.data;
-            response.status = 200;
-            response.message = 'Repository running successfully';
-        }).catch(error => {
-            console.log(error, 'error')
-            throw error;
-        });
-        res.status(200).send(response);
-    }catch(error) {
-        res.send(error.message);
+    if(!data || data.children.length === 0 ){
+        response.error = 'Please provide repository tree';
+        response.status = 300;
+        response.status = 'Error'
+        res.send(response)
+    }else {
+        
+        let response = {
+            error: '',
+            message: '',
+            data: '',
+            status: ''
+        };
+        let directories = [];
+        let files = [];
+        function walkTree(tree){
+            tree.map(item => {
+                if(Array.isArray(item.children)){
+                    directories.push(item);
+                    walkTree(item.children);
+                    return
+                }else {
+                    files.push(item)
+                    return
+                }
+            });
+        };
+        walkTree(data.children);
+        const sandBoxTree = {};
+        try {
+            files.map(item => {
+                const splitArrayLength = (item.path).split('/').length;
+                const joinPath = ((item.path).split('/')).slice(1, splitArrayLength).join('/');
+                sandBoxTree[joinPath] = { 'content': item.content };
+            });
+            const body = { "files": { ...sandBoxTree }};
+            await axios.post(process.env.CODE_SANDBOX_API, body, { headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }}).then(resp => {
+                // path will the name and content will be content
+        
+                // Check if repository already deployed else  
+                // Add sandbox url to firebase database 
+                console.log(response)
+                response.data = resp.data;
+                response.status = 200;
+                response.message = 'Repository running successfully';
+            }).catch(error => {
+                console.log(error, 'error')
+                throw error;
+            });
+            res.status(200).send(response);
+        }catch(error) {
+            res.send(error.message);
+        }
     }
 }
 
