@@ -6,6 +6,7 @@ const firebaseLogin = require('../controllers/login/firebaseLogin');
 const { downloadRepo, createSandboxTreeFromRepoTree } = require("../controllers/repo/downloadRepo");
 const { getLinkPreview, getPreviewFromContent } = require("link-preview-js");
 const scrapLink = require('../controllers/scrap');
+const getMetaData = require('../controllers/scrap/getMetadata');
 
 router.get('/', (req, res) => {
     res.send('Welcome to basic ihatereading-backend repository ');
@@ -37,6 +38,6 @@ router.get('/v1/preview', (req, res) => {
 });
 
 router.get("/v1/embed-log", (req, res) => embedLog);
-
+router.post('/v1/get-meta-data', getMetaData);
 module.exports = router;
 

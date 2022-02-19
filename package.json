@@ -40,6 +40,7 @@
     "schema-validator": "^3.3.1",
     "shelljs": "^0.8.4",
     "simple-git": "^2.47.0",
+    "url-metadata": "^2.5.0",
     "zip-dir": "^2.0.0",
     "zod": "^3.11.6"
   }

@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer');
+const urlMetaData = require("url-metadata");
 
 const scrapLink = async(req, res) => {
     const response = {
@@ -16,12 +17,13 @@ const scrapLink = async(req, res) => {
             const browser = await puppeteer.launch({
                 headless: false,
                 ignoreDefaultArgs: ['--disable-extensions'],
-                args: ['--no-sandbox']
             });
             const page = await browser.newPage();
             await page.goto(link);
             const title = await page.title();
             let h1, h2, thumbnail;
+            const metadata = await urlMetaData(link);
+            console.log(metadata);
             if(await page.$('h1') !== null){
                 await page.waitForSelector("h1", { timeout: 5000 });
                 h1 = await page.$('h1');
