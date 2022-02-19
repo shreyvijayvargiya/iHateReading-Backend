@@ -1,7 +1,4 @@
 const puppeteer = require('puppeteer');
-const { z } = require("zod");
-const fs = require('fs');
-const stream = require("stream");
 
 const scrapLink = async(req, res) => {
     const response = {
@@ -17,7 +14,9 @@ const scrapLink = async(req, res) => {
     }else {
         try {
             const browser = await puppeteer.launch({
-                headless: false
+                headless: false,
+                ignoreDefaultArgs: ['--disable-extensions'],
+                args: ['--no-sandbox']
             });
             const page = await browser.newPage();
             await page.goto(link);
