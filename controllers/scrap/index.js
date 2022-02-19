@@ -16,11 +16,13 @@ const scrapLink = async(req, res) => {
         res.send(response)
     }else {
         try {
-            const browser = await puppeteer.launch({});
+            const browser = await puppeteer.launch({
+                headless: false
+            });
             const page = await browser.newPage();
             await page.goto(link);
             const title = await page.title();
-            let h1, h2,thumbnail;
+            let h1, h2, thumbnail;
             if(await page.$('h1') !== null){
                 await page.waitForSelector("h1", { timeout: 5000 });
                 h1 = await page.$('h1');
@@ -37,7 +39,7 @@ const scrapLink = async(req, res) => {
                 h2,
                 link
             };
-            res.send(response)
+            res.send(response);
         }catch(e){
             console.log(e, 'e');
             res.send({
