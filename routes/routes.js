@@ -4,6 +4,8 @@ const passport = require('passport');
 const router = express.Router();
 const firebaseLogin = require('../controllers/login/firebaseLogin');
 const { downloadRepo, createSandboxTreeFromRepoTree } = require("../controllers/repo/downloadRepo");
+const { getLinkPreview, getPreviewFromContent } = require("link-preview-js");
+const scrapLink = require('../controllers/scrap');
 
 router.get('/', (req, res) => {
     res.send('Welcome to basic ihatereading-backend repository ');
@@ -25,6 +27,16 @@ router.get('/auth/google/callback', passport.authenticate('google', { failureRed
 
 router.get('/v1/custom-repo', (req, res) => res.send('New Custom Repo API '))
 router.post('/v1/deploy-custom-repo', (req, res) => createSandboxTreeFromRepoTree(req, res));
+router.post('/v1/scrap-link', (req, res) => scrapLink(req, res))
+
+router.get('/v1/preview', (req, res) => {
+    getLinkPreview('https://ihatereading.in/createrepo?framework=Next%20JS&repoId=-MgQlG5flVPCV7sJyRYh').then(data => {
+        console.debug(data)
+    });
+    res.send("Done")
+});
+
+router.get("/v1/embed-log", (req, res) => embedLog);
 
 module.exports = router;
 
