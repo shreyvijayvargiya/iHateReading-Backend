@@ -40,7 +40,7 @@ router.get('/v1/preview', (req, res) => {
 
 router.get("/v1/embed-log", (req, res) => embedLog);
 router.post('/v1/get-meta-data', getMetaData);
-router.get('/v1/get-log-data', getLogDetail);
+router.post('/v1/get-log-data', getLogDetail);
 
 module.exports = router;
 
