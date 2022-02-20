@@ -7,6 +7,7 @@ const { downloadRepo, createSandboxTreeFromRepoTree } = require("../controllers/
 const { getLinkPreview, getPreviewFromContent } = require("link-preview-js");
 const scrapLink = require('../controllers/scrap');
 const getMetaData = require('../controllers/scrap/getMetadata');
+const getLogDetail = require('../controllers/log/getLogData');
 
 router.get('/', (req, res) => {
     res.send('Welcome to basic ihatereading-backend repository ');
@@ -39,5 +40,7 @@ router.get('/v1/preview', (req, res) => {
 
 router.get("/v1/embed-log", (req, res) => embedLog);
 router.post('/v1/get-meta-data', getMetaData);
+router.get('/v1/get-log-data', getLogDetail);
+
 module.exports = router;
 

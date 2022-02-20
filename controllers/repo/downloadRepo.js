@@ -125,7 +125,6 @@ const createSandboxTreeFromRepoTree = async(req, res) => {
         
                 // Check if repository already deployed else  
                 // Add sandbox url to firebase database 
-                console.log(response)
                 response.data = resp.data;
                 response.status = 200;
                 response.message = 'Repository running successfully';
