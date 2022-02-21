@@ -12,15 +12,23 @@ const getMetaData = async(req, res) => {
         response.message = 'Please send link';
         res.send(response)
     }else {
-        const metadata = await urlMetaData(link);
-        response.data = {
-            title: metadata?.title,
-            thumbnail: metadata.image,
-            description: metadata?.description,
-            author: metadata.author,
-            link: link
+        try{
+            const metadata = await urlMetaData(link);
+            res.send({
+                title: metadata?.title,
+                thumbnail: metadata.image,
+                description: metadata?.description,
+                author: metadata.author,
+                link: link
+            })
+        }catch(e){
+            console.log(e, 'e');
+            res.send({
+                data: null,
+                error: true,
+                message: e
+            })
         }
-        res.send(response)
     }
 }
 
