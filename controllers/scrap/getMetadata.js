@@ -20,7 +20,7 @@ const getMetaData = async(req, res) => {
                 description: metadata?.description,
                 author: metadata.author,
                 link: link
-            })
+            });
         }catch(e){
             console.log(e, 'e');
             res.send({

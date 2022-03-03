@@ -18,7 +18,12 @@ const firebaseLogin = (req, res) => {
         const { uid, email } = data;
         response.data = { uid, email };
         response.success = true;
-        res.send(response);
+        res.send({
+            success: true,
+            data: { uid, email },
+            error: false,
+            message: '',
+        });
     }).catch((error )=> {
         response.message = error.message;
         response.success = false;
@@ -26,4 +31,6 @@ const firebaseLogin = (req, res) => {
         res.send(response); 
     });
 };
+
+
 module.exports = firebaseLogin;

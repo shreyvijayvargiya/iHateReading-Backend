@@ -6,6 +6,8 @@ const bodyParser = require('body-parser');
 const cors = require("cors");
 const admin = require('firebase-admin');
 const mustacheExpress = require("mustache-express");
+const handlebars = require('express-handlebars');
+const path = require('path');
 
 dotenv.config();
 
@@ -15,10 +17,14 @@ server.use(bodyParser.json());
 server.use(bodyParser.urlencoded({ extended: true }));
 server.use(cors("*"));
 
+server.set("view engine", 'hbs' )
+server.set("views", path.join(__dirname + '/views'))
+server.engine("hbs", handlebars({
+    layoutsDir: path.join(__dirname + '/views'),
+    extname: '.hbs'
+}));
 
-server.engine("html", mustacheExpress());
-server.set("view engine", "html");
-server.set("views", './views');
+
 // server.use(passport.initialize());
 
 admin.initializeApp({

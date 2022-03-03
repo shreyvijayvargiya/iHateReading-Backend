@@ -1,0 +1,14 @@
+<html>
+    <body>
+        <div>
+            <p>Hello {{ receiptName }},</p>
+            <p>Feeling good while emailing you. We have just published more logs so thought of sharing it with you</p>
+            {{ #each logsData }}
+                <div>
+                    <p>{{ @title}}</p>
+                    <p>{{ @description}} </p>
+                </div>
+            {{ /each }}
+        </div>
+    </body>
+</html>
