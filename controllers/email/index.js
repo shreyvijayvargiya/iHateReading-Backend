@@ -103,7 +103,7 @@ const sendSignUpEmail = async(req, res) => {
                 to: {
                     email: email
                 },
-                template: 'EKZZAQHHN5MY70KEJWYVBNCE8Y85',
+                template: 'GCPDH98BDX4APJG7G18VNQRAKNYF',
             }
         });
         res.send({ 
@@ -123,25 +123,16 @@ const sendSignUpEmail = async(req, res) => {
     }
 };
 const sendFirstEmail = async(req, res) => {
-    const db = admin.database().ref("users");
-    const users = (await db.once("value")).val();
-    const usersData = Object.keys(users).map(item => {
-        return { receiptName: users[item].userName, email: users[item].userEmail }
-    });
-    
-    console.log(usersData)
+    const { userName, userEmail } = req.body;
     try{ 
         const { requestId } = await courier.send({
             message: {
-                data: [ 
-                    {
-                        receiptName: 'Trey'
+                data: {
+                        receiptName: userName
                     },
-                    {
-                        receiptName: "shrey"
-                    }
-                ],
-                to: usersData,
+                to: {
+                    email: userEmail
+                },
                 template: 'EKZZAQHHN5MY70KEJWYVBNCE8Y85',
             },
         });
