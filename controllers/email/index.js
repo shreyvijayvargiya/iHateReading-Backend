@@ -123,7 +123,7 @@ const sendSignUpEmail = async(req, res) => {
     }
 };
 const sendFirstEmail = async(req, res) => {
-    const { userName, userEmail } = req.body;
+    const { userName, userEmail } = req.body.data;
     try{ 
         const { requestId } = await courier.send({
             message: {
