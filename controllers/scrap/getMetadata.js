@@ -14,13 +14,14 @@ const getMetaData = async(req, res) => {
     }else {
         try{
             const metadata = await urlMetaData(link);
-            res.send({
-                title: metadata?.title,
-                thumbnail: metadata.image,
-                description: metadata?.description,
-                author: metadata.author,
-                link: link
-            });
+            // res.send({
+            //     title: metadata?.title,
+            //     thumbnail: metadata.image,
+            //     description: metadata?.description,
+            //     author: metadata.author,
+            //     link: link
+            // });
+            res.json(metadata);
         }catch(e){
             console.log(e, 'e');
             res.send({
