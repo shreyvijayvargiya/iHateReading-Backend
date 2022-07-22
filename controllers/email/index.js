@@ -163,17 +163,30 @@ const sendEmailToListUsers = async (req, res) => {
 				email: item.email,
 			};
 		});
+		const { logIds } = req.body;
+		const dbRef = await admin.database().ref("articles/publish");
+		const allLogs = (await dbRef.once("value")).val();
+		const filteredLogs = logIds.map(item => {
+			return {
+				title: allLogs[item].title,
+				description: allLogs[item].description,
+				bannerImage: allLogs[item].bannerImage,
+			};
+		});
 		const { requestId } = await courier.send({
 			message: {
-				to: toData,
+				to: [
+					{
+						email: "shreyvijayvargiya26@gmail.com",
+					},
+				],
 				template: "GCPDH98BDX4APJG7G18VNQRAKNYF",
-			},
-			routing: {
-				method: "single",
-				channels: ["email"],
-			},
+				data: {
+					logsData: filteredLogs,
+				},
+			}
 		});
-		res.json({ reuestId: requestId, message: "Email sent to the users" });
+		res.json({ requestId: requestId, message: "Email sent to the users" });
 	} catch (e) {
 		console.log(e, "error in sending email");
 		res.send("Error in sending email to the list users");
@@ -203,3 +216,18 @@ module.exports = {
 	addRecipient,
 	sendFirstEmail,
 };
+
+
+//  <div class="logsContainer">
+//       {{#each logsData }}
+//         <a href={{ link }} target="_blank" class="titlelink">
+//           <div class="logContainer">
+//             <h2 class="title">{{  title }}</h2>
+//             <hr class="divider" color="#eeeeee" />
+//             <img  src={{ bannerImage }} class="img"  />
+//             <hr class="divider" color="#eeeeee" />
+//             <p class="description">{{ description }}</p>
+//           </div>
+//         </a>
+//       {{/each}}
+//     </div>
