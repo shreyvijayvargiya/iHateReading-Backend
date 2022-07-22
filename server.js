@@ -8,6 +8,7 @@ const admin = require('firebase-admin');
 const mustacheExpress = require("mustache-express");
 const handlebars = require('express-handlebars');
 const path = require('path');
+const cmsRouter = require('./routes/cms');
 
 dotenv.config();
 
@@ -33,6 +34,7 @@ admin.initializeApp({
     projectId: process.env.FIREBASE_PROJECT_ID,
 })
 server.use(router);
+server.use("/cms", cmsRouter);
 server.use('/github', githubRouter);
 
 
