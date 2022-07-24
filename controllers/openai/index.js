@@ -45,13 +45,8 @@ export const addSummary = async (logId) => {
 };
 
 export const createSummary = async (req, res) => {
-	try {
-		const data = await admin.firestore().collection("threads").get();
-		const logIds = data.docs.map((doc) => doc.id);
-		logIds.map((logId) => addSummary(logId));
-		res.send("Done");
-	} catch (error) {
-		console.log(error, "error");
-		res.send("Error");
-	}
+	const data = await admin.firestore().collection("threads").get();
+	const logIds = data.docs.map((doc) => doc.id);
+	logIds.map((logId) => addSummary(logId));
+	res.send("Done");
 };

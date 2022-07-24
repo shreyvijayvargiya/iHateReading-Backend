@@ -1,6 +1,4 @@
 import axios from "axios";
-import fs from "fs";
-import path from "path";
 
 let responseBody = {
 	success: Boolean,

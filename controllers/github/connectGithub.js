@@ -13,7 +13,6 @@ export const connectGithub = async (req, res) => {
 		client_secret: process.env.clientSecret,
 		code: req.query.code,
 	};
-	console.log(req, "req path");
 	await axios
 		.post(process.env.GITHUB_LOGIN_URL, body, {
 			headers: { accept: "application/json" },

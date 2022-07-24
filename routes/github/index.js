@@ -17,7 +17,6 @@ let response = {
 };
 
 githubRouter.get("/", (req, res) => {
-	console.log(process.env.clientId);
 	res.send("Hello");
 });
 
