@@ -34,7 +34,7 @@ export const postTweet = async (req, res) => {
 			});
 		const threadIds = _.shuffle(allThreads).slice(0, 4);
 		const firstTweet = cron.schedule(
-			` 0 21 * * * *`,
+			`58 23 * * * `,
 			async () => {
         const log = threadIds[0];
 				await twitterClient.v2.tweet(
@@ -47,7 +47,7 @@ export const postTweet = async (req, res) => {
 			{ scheduled: true, timezone: "IST" }
 		);
 		const secondTweet = cron.schedule(
-			` 0 22 * * * *`,
+			`59 23 * * * `,
 			async () => {
         const log = threadIds[1];
 				await twitterClient.v2.tweet(
@@ -60,7 +60,7 @@ export const postTweet = async (req, res) => {
 			{ scheduled: true, timezone: "IST" }
 		);
 		const thirdTweet = cron.schedule(
-			` 0 23 * * * *`,
+			` 59 23 * * * `,
 			async () => {
         const log = threadIds[2];
 				await twitterClient.v2.tweet(
@@ -73,7 +73,7 @@ export const postTweet = async (req, res) => {
 			{ scheduled: true, timezone: "IST" }
 		);
 		const fourthTweet = cron.schedule(
-			` 3 0 * * * *`,
+			` 0 0 * * *`,
 			async () => {
         const log = threadIds[3];
 				await twitterClient.v2.tweet(
