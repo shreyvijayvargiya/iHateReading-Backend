@@ -1,7 +1,7 @@
-const express = require("express");
+import express from "express";
+import { getUserMediumArticles } from "../../controllers/medium-api";
 const mediumApiRouter = express.Router();
-const { getUserMediumArticles } = require("../../controllers/medium-api");
 
 mediumApiRouter.get();
 
-module.exports = mediumApiRouter;
+export default mediumApiRouter;

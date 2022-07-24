@@ -1,7 +1,7 @@
-const courier = require("../../utils/CourierClient");
-const admin = require("firebase-admin");
+import { courier } from "../../utils/CourierClient.js";
+import admin from "firebase-admin";
 
-const sendLogEmail = async (req, res) => {
+export const sendLogEmail = async (req, res) => {
 	const { logIds } = req.body;
 	const db = admin.database().ref("articles/publish");
 	const data = (await db.once("value")).val();
@@ -53,7 +53,7 @@ const sendLogEmail = async (req, res) => {
 	}
 };
 
-const sendListToCourier = async (req, res) => {
+export const sendListToCourier = async (req, res) => {
 	const db = admin.database().ref("users");
 	const users = (await db.once("value")).val();
 	const usersKeys = Object.keys(users);
@@ -78,12 +78,12 @@ const sendListToCourier = async (req, res) => {
 	}
 };
 
-const getLists = async (req, res) => {
+export const getLists = async (req, res) => {
 	const lists = await courier.lists.list();
 	res.send(lists);
 };
 
-const addUserInList = async (req, res) => {
+export const addUserInList = async (req, res) => {
 	const { userEmail } = req.body;
 	try {
 		const data = await courier.addRecipientToLists({
@@ -98,7 +98,7 @@ const addUserInList = async (req, res) => {
 	}
 };
 
-const sendSignUpEmail = async (req, res) => {
+export const sendSignUpEmail = async (req, res) => {
 	const { email } = req.body;
 	try {
 		const { requestId } = await courier.send({
@@ -124,7 +124,7 @@ const sendSignUpEmail = async (req, res) => {
 		});
 	}
 };
-const sendFirstEmail = async (req, res) => {
+export const sendFirstEmail = async (req, res) => {
 	const { userName, userEmail } = req.body.data;
 	try {
 		const { requestId } = await courier.send({
@@ -155,10 +155,10 @@ const sendFirstEmail = async (req, res) => {
 	}
 };
 
-const sendEmailToListUsers = async (req, res) => {
+export const sendEmailToListUsers = async (req, res) => {
 	try {
 		const users = await admin.auth().listUsers();
-		const toData = users.users.map(item => {
+		const toData = users.users.map((item) => {
 			return {
 				email: item.email,
 			};
@@ -166,7 +166,7 @@ const sendEmailToListUsers = async (req, res) => {
 		const { logIds } = req.body;
 		const dbRef = await admin.database().ref("articles/publish");
 		const allLogs = (await dbRef.once("value")).val();
-		const filteredLogs = logIds.map(item => {
+		const filteredLogs = logIds.map((item) => {
 			return {
 				title: allLogs[item].title,
 				description: allLogs[item].description,
@@ -184,7 +184,7 @@ const sendEmailToListUsers = async (req, res) => {
 				data: {
 					logsData: filteredLogs,
 				},
-			}
+			},
 		});
 		res.json({ requestId: requestId, message: "Email sent to the users" });
 	} catch (e) {
@@ -193,7 +193,7 @@ const sendEmailToListUsers = async (req, res) => {
 	}
 };
 
-const addRecipient = async (req, res) => {
+export const addRecipient = async (req, res) => {
 	const { status: recipientId } = await courier.replaceProfile({
 		recipientId: req.body.id,
 		profile: { email: req.body.email },
@@ -205,29 +205,3 @@ const addRecipient = async (req, res) => {
 		error: false,
 	});
 };
-
-module.exports = {
-	sendLogEmail,
-	sendListToCourier,
-	addUserInList,
-	getLists,
-	sendSignUpEmail,
-	sendEmailToListUsers,
-	addRecipient,
-	sendFirstEmail,
-};
-
-
-//  <div class="logsContainer">
-//       {{#each logsData }}
-//         <a href={{ link }} target="_blank" class="titlelink">
-//           <div class="logContainer">
-//             <h2 class="title">{{  title }}</h2>
-//             <hr class="divider" color="#eeeeee" />
-//             <img  src={{ bannerImage }} class="img"  />
-//             <hr class="divider" color="#eeeeee" />
-//             <p class="description">{{ description }}</p>
-//           </div>
-//         </a>
-//       {{/each}}
-//     </div>

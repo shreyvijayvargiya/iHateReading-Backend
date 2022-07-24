@@ -1,10 +1,13 @@
-const admin = require("firebase-admin");
+import admin from "firebase-admin";
 
-async function checkUserValidity(userId){
-    return admin.auth().getUser(userId).then(() => {
-      return { isUserValid: true }
-    }).catch(()=> {
-      return { isUserValid : false }
-    });
-};
-module.exports = checkUserValidity;
+export default async function checkUserValidity(userId) {
+	return admin
+		.auth()
+		.getUser(userId)
+		.then(() => {
+			return { isUserValid: true };
+		})
+		.catch(() => {
+			return { isUserValid: false };
+		});
+}

@@ -1,6 +1,6 @@
-const admin = require("firebase-admin");
+import admin from "firebase-admin";
 
-const getLogDetail = async (req, res) => {
+export const getLogDetail = async (req, res) => {
 	const logId = req.body.logId;
 	if (!logId) {
 		res.send({
@@ -14,5 +14,3 @@ const getLogDetail = async (req, res) => {
 		res.send(data);
 	}
 };
-
-module.exports = getLogDetail;

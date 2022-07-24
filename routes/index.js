@@ -1,16 +1,15 @@
-const express = require("express");
-const passport = require("passport");
-const router = express.Router();
-const firebaseLogin = require("../controllers/login/firebaseLogin");
-const {
+import express from "express";
+import passport from "passport";
+import { firebaseLogin } from "../controllers/login/firebaseLogin.js";
+import {
 	downloadRepo,
 	createSandboxTreeFromRepoTree,
-} = require("../controllers/repo/downloadRepo");
-const { getLinkPreview } = require("link-preview-js");
-const scrapLink = require("../controllers/scrap");
-const getMetaData = require("../controllers/scrap/getMetadata");
-const getLogDetail = require("../controllers/log/getLogData");
-const {
+} from "../controllers/repo/downloadRepo.js";
+import { getLinkPreview } from "link-preview-js";
+import { scrapLink } from "../controllers/scrap/index.js";
+import { getMetaData } from "../controllers/scrap/getMetadata.js";
+import { getLogDetail } from "../controllers/log/getLogData.js";
+import {
 	sendLogEmail,
 	sendListToCourier,
 	sendEmailToListUsers,
@@ -18,9 +17,11 @@ const {
 	getLists,
 	sendFirstEmail,
 	sendSignUpEmail,
-	subscribeLists,
 	addRecipient,
-} = require("../controllers/email");
+} from "../controllers/email/index.js";
+import { scrapMediumArticles } from "../controllers/scrap/index.js";
+
+const router = express.Router();
 
 router.get("/", (req, res) => {
 	res.send("Welcome to basic ihatereading-backend repository ");
@@ -84,5 +85,6 @@ router.get("/v1/api/add-user", addRecipient);
 router.get("/v1/api/send-email-list-users", sendEmailToListUsers);
 
 router.post("/v1/api/send-first-email", sendFirstEmail);
+router.get("/v1/api/get-medium-articles", scrapMediumArticles);
 
-module.exports = router;
+export default router;

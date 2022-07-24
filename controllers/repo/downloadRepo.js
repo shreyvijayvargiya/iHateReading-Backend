@@ -1,9 +1,8 @@
-const fs = require("fs");
-const checkUserValidity = require("../../utils/checkUserValidity");
-const path = require("path");
-const zipdir = require("zip-dir");
-const child_process = require("child_process").execFileSync;
-const axios = require("axios");
+import fs from "fs";
+import checkUserValidity from "../../utils/checkUserValidity.js";
+import path from "path";
+import zipdir from "zip-dir";
+import axios from "axios";
 
 function createDirectory(pathname, name) {
 	fs.mkdirSync(
@@ -25,14 +24,7 @@ function createFile(pathname, filename, content) {
 	});
 }
 
-function installDependencies(dependencies) {
-	const filePath = path.join(process.cwd() + "/repos/" + package.json);
-	dependencies.forEach((packageName) => {
-		child_process(`cd ${filePath} && yarn add ${packageName}`);
-	});
-}
-
-const downloadRepo = async (req, res) => {
+export const downloadRepo = async (req, res) => {
 	const { tree, userId } = req.body;
 	const { isUserValid } = await checkUserValidity(userId);
 	if (!isUserValid) {
@@ -78,7 +70,7 @@ const downloadRepo = async (req, res) => {
 	}
 };
 
-const createSandboxTreeFromRepoTree = async (req, res) => {
+export const createSandboxTreeFromRepoTree = async (req, res) => {
 	const data = req.body.repoTree;
 	let response = {
 		error: "",
@@ -151,4 +143,3 @@ const createSandboxTreeFromRepoTree = async (req, res) => {
 	}
 };
 
-module.exports = { downloadRepo, createSandboxTreeFromRepoTree };
