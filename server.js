@@ -6,7 +6,6 @@ import admin from "firebase-admin";
 import handlebars from "express-handlebars";
 import path from "path";
 import router from "./routes/index.js";
-import cmsRouter from "./routes/cms/index.js";
 import threadRouter from "./routes/t/index.js";
 import githubRouter from "./routes/github/index.js";
 
@@ -35,7 +34,6 @@ admin.initializeApp({
 	projectId: process.env.FIREBASE_PROJECT_ID,
 });
 server.use("/", router);
-server.use("/cms", cmsRouter);
 server.use("/github", githubRouter);
 server.use("/t", threadRouter);
 
