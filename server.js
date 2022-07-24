@@ -1,14 +1,14 @@
 import express from "express";
-import router from "./routes/index.js";
-import githubRouter from "./routes/github/index.js";
 import dotenv from "dotenv";
 import bodyParser from "body-parser";
 import cors from "cors";
 import admin from "firebase-admin";
 import handlebars from "express-handlebars";
 import path from "path";
+import router from "./routes/index.js";
 import cmsRouter from "./routes/cms/index.js";
 import threadRouter from "./routes/t/index.js";
+import githubRouter from "./routes/github/index.js";
 
 dotenv.config();
 
