@@ -32,63 +32,24 @@ export const postTweet = async (req, res) => {
 			.map(async (log) => {
 				return { message: "Done" };
 			});
-		const threadIds = _.shuffle(allThreads).slice(0, 4);
-		const firstTweet = cron.schedule(
-			`58 23 * * * `,
-			async () => {
-        const log = threadIds[0];
-				await twitterClient.v2.tweet(
-					`https://www.ihatereading.in/t/${log.id}/${log?.title?.replaceAll(
-						" ",
-						"-"
-					)} \n #writerslift #programming #ihatereading #webdev #javascript #blogger #design`
-				);
-			},
-			{ scheduled: true, timezone: "IST" }
-		);
-		const secondTweet = cron.schedule(
-			`59 23 * * * `,
-			async () => {
-        const log = threadIds[1];
-				await twitterClient.v2.tweet(
-					`https://www.ihatereading.in/t/${log.id}/${log?.title?.replaceAll(
-						" ",
-						"-"
-					)} \n #writerslift #programming #ihatereading #webdev #javascript #blogger #design`
-				);
-			},
-			{ scheduled: true, timezone: "IST" }
-		);
-		const thirdTweet = cron.schedule(
-			` 59 23 * * * `,
-			async () => {
-        const log = threadIds[2];
-				await twitterClient.v2.tweet(
-					`https://www.ihatereading.in/t/${log.id}/${log?.title?.replaceAll(
-						" ",
-						"-"
-					)} \n #writerslift #programming #ihatereading #webdev #javascript #blogger #design`
-				);
-			},
-			{ scheduled: true, timezone: "IST" }
-		);
-		const fourthTweet = cron.schedule(
-			` 0 0 * * *`,
-			async () => {
-        const log = threadIds[3];
-				await twitterClient.v2.tweet(
-					`https://www.ihatereading.in/t/${log.id}/${log?.title?.replaceAll(
-						" ",
-						"-"
-					)} \n #writerslift #programming #ihatereading #webdev #javascript #blogger #design`
-				);
-			},
-			{ scheduled: true, timezone: "IST" }
-		);
-		firstTweet.start();
-		secondTweet.start();
-		thirdTweet.start();
-		fourthTweet.start();
+		const threadIds = _.shuffle(allThreads).slice(0, 1);
+		const times = [50, 51];
+		threadIds.forEach((log, index) => {
+			const tweet = cron.schedule(
+				`${times[index]} 19 * * * `,
+				async () => {
+					await twitterClient.v2.tweet(
+						`https://www.ihatereading.in/t/${log.id}/${log?.title?.replaceAll(
+							" ",
+							"-"
+						)} \n #writerslift #programming #ihatereading #webdev #javascript #blogger #design`
+					);
+				},
+				{ scheduled: true, timezone: "IST" }
+			);
+			tweet.start();
+		})
+		
 		Promise.all(tweetResponse)
 			.then((data) => console.log(data, "data"))
 			.catch((error) => console.log(error));

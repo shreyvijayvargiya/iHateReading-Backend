@@ -50,3 +50,22 @@ export const createSummary = async (req, res) => {
 	logIds.map((logId) => addSummary(logId));
 	res.send("Done");
 };
+
+export const searchLocations = async (req, res) => {
+	const openai = new OpenAIApi(configuration);
+	const response = await openai.createCompletion({
+		model: "text-davinci-002",
+		prompt:
+			"Give list of 2 places in himachal pradesh for a trek with names, latitude and longitude",
+		temperature: 0.7,
+		max_tokens: 500,
+		top_p: 1,
+		frequency_penalty: 0,
+		presence_penalty: 0,
+	});
+	
+	console.log(response.data.choices[0], "response");
+	res.send(response.data.choices[0].text);
+};
+
+

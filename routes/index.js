@@ -21,6 +21,7 @@ import {
 } from "../controllers/email/index.js";
 import { scrapMediumArticles } from "../controllers/scrap/index.js";
 import { postTweet } from "../controllers/tweet/index.js";
+import { searchLocations } from "../controllers/openai/index.js";
 
 const router = express.Router();
 
@@ -88,5 +89,7 @@ router.get("/v1/api/send-email-list-users", sendEmailToListUsers);
 router.post("/v1/api/send-first-email", sendFirstEmail);
 router.get("/v1/api/get-medium-articles", scrapMediumArticles);
 
-router.post("/v1/api/postTweet", postTweet);
+router.get("/v1/api/postTweet", postTweet);
+router.get("/search", searchLocations);
+
 export default router;
