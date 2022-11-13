@@ -68,7 +68,6 @@ router.get("/v1/preview", (req, res) => {
 	res.send("Done");
 });
 
-router.get("/v1/embed-log", (req, res) => embedLog);
 router.post("/v1/get-meta-data", getMetaData);
 router.post("/v1/get-log-data", getLogDetail);
 
