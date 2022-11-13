@@ -22,7 +22,6 @@ import {
 import { scrapMediumArticles } from "../controllers/scrap/index.js";
 import { postTweet } from "../controllers/tweet/index.js";
 
-
 const router = express.Router();
 
 router.get("/", (req, res) => {
@@ -55,7 +54,6 @@ router.get(
 	}
 );
 
-router.get("/v1/custom-repo", (req, res) => res.send("New Custom Repo API "));
 router.post("/v1/deploy-custom-repo", (req, res) =>
 	createSandboxTreeFromRepoTree(req, res)
 );
