@@ -8,7 +8,7 @@ import path from "path";
 import router from "./routes/index.js";
 import threadRouter from "./routes/t/index.js";
 import githubRouter from "./routes/github/index.js";
-import compression from 'compression';
+import compression from "compression";
 
 dotenv.config();
 
@@ -35,10 +35,12 @@ admin.initializeApp({
 	projectId: process.env.FIREBASE_PROJECT_ID,
 });
 
-server.use(compression({
-	threshold: 100 * 1000,
-	level: 6
-}))
+server.use(
+	compression({
+		threshold: 100 * 1000,
+		level: 6,
+	})
+);
 server.use("/", router);
 server.use("/github", githubRouter);
 server.use("/t", threadRouter);
@@ -46,3 +48,6 @@ server.use("/t", threadRouter);
 server.listen(process.env.PORT || 4000, () =>
 	console.log("Server is running on port 4000")
 );
+
+
+
