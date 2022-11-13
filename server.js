@@ -6,7 +6,6 @@ import admin from "firebase-admin";
 import handlebars from "express-handlebars";
 import path from "path";
 import router from "./routes/index.js";
-import githubRouter from "./routes/github/index.js";
 import compression from "compression";
 
 dotenv.config();
@@ -41,7 +40,7 @@ server.use(
 	})
 );
 server.use("/", router);
-server.use("/github", githubRouter);
+
 
 server.listen(process.env.PORT || 4000, () =>
 	console.log("Server is running on port 4000")
