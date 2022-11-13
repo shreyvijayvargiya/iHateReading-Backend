@@ -52,7 +52,8 @@ export const downloadRepo = async (req, res) => {
 				}
 			});
 		}
-		walkTree(tree.children);
+		const repoTree = JSON.parse(tree);
+		walkTree(repoTree.children);
 		directories.map((item) => {
 			createDirectory(item.path, item.name);
 		});
