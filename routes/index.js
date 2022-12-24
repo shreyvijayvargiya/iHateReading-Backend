@@ -7,7 +7,7 @@ import {
 } from "../controllers/repo/downloadRepo.js";
 import { getLinkPreview } from "link-preview-js";
 import { scrapLink } from "../controllers/scrap/index.js";
-import { getMetaData } from "../controllers/scrap/getMetadata.js";
+import { getMetadata } from "../controllers/scrap/getMetadata.js";
 import { getLogDetail } from "../controllers/log/getLogData.js";
 import {
 	sendLogEmail,
@@ -18,9 +18,14 @@ import {
 	sendFirstEmail,
 	sendSignUpEmail,
 	addRecipient,
+	notiontohtml,
+	sendEmailUsingSendInBlue,
+	sendTestingEmailUsingSendInBlue,
 } from "../controllers/email/index.js";
 import { scrapMediumArticles } from "../controllers/scrap/index.js";
 import { postTweet } from "../controllers/tweet/index.js";
+import { connectTwitter } from "../controllers/tweet/twitter";
+
 
 const router = express.Router();
 
@@ -54,6 +59,7 @@ router.get(
 	}
 );
 
+
 router.post("/v1/deploy-custom-repo", (req, res) =>
 	createSandboxTreeFromRepoTree(req, res)
 );
@@ -68,7 +74,7 @@ router.get("/v1/preview", (req, res) => {
 	res.send("Done");
 });
 
-router.post("/v1/get-meta-data", getMetaData);
+router.post("/v1/get-meta-data", getMetadata);
 router.post("/v1/get-log-data", getLogDetail);
 
 router.post("/v1/api/sendLogEmail", sendLogEmail);
@@ -81,12 +87,18 @@ router.post("/v1/api/add-user-in-list", addUserInList);
 router.get("/v1/api/get-lists", getLists);
 router.get("/v1/api/signup-email", sendSignUpEmail);
 router.get("/v1/api/add-user", addRecipient);
+router.post("/v1/api/sendinblue/send-email", sendEmailUsingSendInBlue);
+router.post("/v1/api/sendinblue/send-test-email", sendTestingEmailUsingSendInBlue);
+;
+
+router.get("/v1/api/notion-to-html", notiontohtml);
 router.get("/v1/api/send-email-list-users", sendEmailToListUsers);
 
 router.post("/v1/api/send-first-email", sendFirstEmail);
 router.get("/v1/api/get-medium-articles", scrapMediumArticles);
 
 router.get("/v1/api/postTweet", postTweet);
+router.get("/v1/api/connectTwitter", connectTwitter);
 
 
 export default router;

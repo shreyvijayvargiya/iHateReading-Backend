@@ -1,6 +1,7 @@
 import urlMetaData from "url-metadata";
+import getMetaData from "metadata-scraper";
 
-export const getMetaData = async (req, res) => {
+export const getMetadata = async (req, res) => {
 	const response = {
 		data: null,
 		message: "",
@@ -13,7 +14,7 @@ export const getMetaData = async (req, res) => {
 		res.send(response);
 	} else {
 		try {
-			const metadata = await urlMetaData(link);
+			const metadata = await getMetaData(link);
 			// res.send({
 			//     title: metadata?.title,
 			//     thumbnail: metadata.image,

@@ -1,5 +1,12 @@
 import { courier } from "../../utils/CourierClient.js";
 import admin from "firebase-admin";
+import NotionPageToHtml from "notion-page-to-html"
+import Sib from "sib-api-v3-sdk";
+
+const client = Sib.ApiClient.instance;
+const apiKey = client.authentications["api-key"];
+apiKey.apiKey = process.env.SEND_IN_BLUE_KEY;
+
 
 export const sendLogEmail = async (req, res) => {
 	const { logIds } = req.body;
@@ -84,14 +91,25 @@ export const getLists = async (req, res) => {
 };
 
 export const addUserInList = async (req, res) => {
-	const { userEmail } = req.body;
 	try {
-		const data = await courier.addRecipientToLists({
-			recipientId: userEmail,
-			lists: [{ listId: "subscribers.free" }],
+		const newsletters = (await (await admin.database().ref("users").once("value")).val());
+		// const users = await (await admin.auth().listUsers(300)).users;
+		// let finalEmails = []
+		// users.filter(item =>{ if(!newsletters.includes(item.email) && item.email && item.email !== null){ finalEmails.push(item.email) }else return undefined });
+		const finalEmails = Object.keys(newsletters).filter(
+			(item) => newsletters[item]["userEmail"]
+		);
+		const newsletter = finalEmails.map((item) => {
+			return newsletters[item]["userEmail"];
 		});
-		console.log(data, "data");
-		res.send("Added in the lists");
+		admin
+			.firestore()
+			.collection("subscribers")
+			.doc("list")
+			.update({
+				newsletters: admin.firestore.FieldValue.arrayUnion(...newsletter),
+			});
+		res.json(newsletter);
 	} catch (e) {
 		console.log(e, "error");
 		res.send("Error in adding email in the lists");
@@ -157,33 +175,24 @@ export const sendFirstEmail = async (req, res) => {
 
 export const sendEmailToListUsers = async (req, res) => {
 	try {
-		const users = await admin.auth().listUsers();
-		const toData = users.users.map((item) => {
-			return {
-				email: item.email,
-			};
-		});
-		const { logIds } = req.body;
-		const dbRef = await admin.database().ref("articles/publish");
-		const allLogs = (await dbRef.once("value")).val();
-		const filteredLogs = logIds.map((item) => {
-			return {
-				title: allLogs[item].title,
-				description: allLogs[item].description,
-				bannerImage: allLogs[item].bannerImage,
-			};
-		});
+		const users = await admin
+			.firestore()
+			.collection("subscribers")
+			.doc("list")
+			.get();
+		const toData = users
+			.data()
+			["newsletters"]
+			.map((item) => ({ email: item }));
+		// const { title, icon, cover, html } = await NotionPageToHtml.convert(
+		// 	req.body.url,
+		// 	{ excludeHeaderFromBody: false }
+		// );
+		
 		const { requestId } = await courier.send({
 			message: {
-				to: [
-					{
-						email: "shreyvijayvargiya26@gmail.com",
-					},
-				],
+				to: toData,
 				template: "GCPDH98BDX4APJG7G18VNQRAKNYF",
-				data: {
-					logsData: filteredLogs,
-				},
 			},
 		});
 		res.json({ requestId: requestId, message: "Email sent to the users" });
@@ -204,4 +213,104 @@ export const addRecipient = async (req, res) => {
 		data: recipientId,
 		error: false,
 	});
+};
+
+export const sendEmailUsingSendInBlue = async(req, res) => {
+		const tranEmailApi = new Sib.TransactionalEmailsApi();
+		const { subject, body } = req.body; 
+		let response = {
+			error: false,
+			success: true,
+			data: null,
+			status: 200,
+		};
+		if(!body || !subject){
+			response.error = "Please add body and subject";
+			response.status = 400;
+			response.success = false;
+			response.data = "Body and subject are required"
+		}else {
+			const sender = {
+				email: "shreyvijayvargiya26@gmail.com",
+				name: "Shrey",
+			};
+			const users = await admin
+				.firestore()
+				.collection("subscribers")
+				.doc("list")
+				.get();
+			const receivers = users
+				.data()
+				["newsletters"].map((item) => ({ email: item }));
+			await tranEmailApi
+				.sendTransacEmail({
+					sender,
+					to: receivers,
+					subject: subject,
+					htmlContent: body,
+				}).then(data => {
+					response.data = data;
+					response.error= false;
+					response.success = true;
+					response.status = 200;
+				}).catch(error => {
+					response.data = null;
+					response.error = error;
+					response.success = false;
+					response.status = 500;
+				})
+		}
+		res.send(response);
+}
+
+export const sendTestingEmailUsingSendInBlue = async(req, res) => {
+		const tranEmailApi = new Sib.TransactionalEmailsApi();
+		const { subject, body } = req.body; 
+		let response = {
+			error: false,
+			success: true,
+			data: null,
+			status: 200,
+		};
+		if(!body || !subject){
+			response.error = "Please add body and subject";
+			response.status = 400;
+			response.success = false;
+			response.data = "Body and subject are required"
+		}else {
+			const sender = {
+				email: "shreyvijayvargiya26@gmail.com",
+				name: "Shrey",
+			};
+			const receivers = [
+				{
+					email: "shreyvijayvargiya26@gmail.com",
+				},
+			];
+			await tranEmailApi
+				.sendTransacEmail({
+					sender,
+					to: receivers,
+					subject: subject,
+					htmlContent: body,
+				}).then(data => {
+					response.data = data;
+					response.error= false;
+					response.success = true;
+					response.status = 200;
+				}).catch(error => {
+					response.data = null;
+					response.error = error;
+					response.success = false;
+					response.status = 500;
+				})
+		}
+		res.send(response);
+}
+
+export const notiontohtml = async (req, res) => {
+	const { title, icon, cover, html } = await NotionPageToHtml.convert(
+		req.body.url, { excludeHeaderFromBody: true }
+	);
+	res.send(html)
 };

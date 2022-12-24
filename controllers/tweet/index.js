@@ -32,15 +32,15 @@ export const postTweet = async (req, res) => {
 			.map(async (log) => {
 				return { message: "Done" };
 			});
-		const threadIds = _.shuffle(allThreads).slice(0, 6);
-		const times = [14, 15, 16, 17, 18, 19];
+		const threadIds = _.shuffle(allThreads).slice(0, 5);
+		const times = [15, 16, 17, 18, 19];
 		threadIds.forEach((log, index) => {
 			const tweet = cron.schedule(
 				`1 ${times[index]} * * *
 				 `,
 				async () => {
 					await twitterClient.v2.tweet(
-						`${log.title} \n- 
+						`Sharing an interesting thread: ${log.title} \n- 
 						https://www.ihatereading.in/t/${log.id}/${log?.title?.replaceAll(
 							" ",
 							"-"

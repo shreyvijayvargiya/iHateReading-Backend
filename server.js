@@ -31,7 +31,10 @@ admin.initializeApp({
 	credential: admin.credential.cert("./service-account-file.json"),
 	databaseURL: process.env.FIREBASE_DATABASE_URL,
 	projectId: process.env.FIREBASE_PROJECT_ID,
+	
 });
+
+admin.firestore().settings({ ignoreUndefinedProperties: true })
 
 server.use(
 	compression({
