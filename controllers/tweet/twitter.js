@@ -21,8 +21,3 @@ const twitterClient = new TwitterApi({
 
 const url = "https://api.twitter.com/1.1/users/search.json";
 
-export const connectTwitter = async(req, res) => {
-	const data = await twitterClient.v2.usersByUsernames("soc")
-	console.log(data, "data");
-  res.send("Twitter API connected")
-};
