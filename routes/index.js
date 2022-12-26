@@ -24,7 +24,7 @@ import {
 } from "../controllers/email/index.js";
 import { scrapMediumArticles } from "../controllers/scrap/index.js";
 import { postTweet } from "../controllers/tweet/index.js";
-
+import { addGumroadTemplate } from "../controllers/templayes/index.js";
 
 
 const router = express.Router();
@@ -89,7 +89,9 @@ router.get("/v1/api/signup-email", sendSignUpEmail);
 router.get("/v1/api/add-user", addRecipient);
 router.post("/v1/api/sendinblue/send-email", sendEmailUsingSendInBlue);
 router.post("/v1/api/sendinblue/send-test-email", sendTestingEmailUsingSendInBlue);
-;
+
+// gumroads
+router.get("/v1/api/gumroad/addTemplate", addGumroadTemplate);
 
 router.get("/v1/api/notion-to-html", notiontohtml);
 router.get("/v1/api/send-email-list-users", sendEmailToListUsers);

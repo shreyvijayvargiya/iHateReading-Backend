@@ -192,7 +192,7 @@ export const sendEmailToListUsers = async (req, res) => {
 		const { requestId } = await courier.send({
 			message: {
 				to: toData,
-				template: "GCPDH98BDX4APJG7G18VNQRAKNYF",
+				template: "JSEDA0T59P4QEEHF0X67S4K98MQZ",
 			},
 		});
 		res.json({ requestId: requestId, message: "Email sent to the users" });
