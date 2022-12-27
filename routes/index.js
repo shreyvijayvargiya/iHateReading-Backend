@@ -24,8 +24,8 @@ import {
 } from "../controllers/email/index.js";
 import { scrapMediumArticles } from "../controllers/scrap/index.js";
 import { postTweet } from "../controllers/tweet/index.js";
-import { addGumroadTemplate } from "../controllers/templayes/index.js";
-
+import { addGumroadTemplate } from "../controllers/templates/index.js";
+import rssToJson from "rss-to-json";
 
 const router = express.Router();
 
@@ -101,5 +101,9 @@ router.get("/v1/api/get-medium-articles", scrapMediumArticles);
 
 router.get("/v1/api/postTweet", postTweet);
 
+router.get("/get-medium-blogs", async(req, res) => {
+	const data = await rssToJson("https://medium.com/feed/@shreyvijayvargiya26");
+	res.send(data);
+})
 
 export default router;

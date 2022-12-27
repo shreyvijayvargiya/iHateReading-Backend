@@ -44,6 +44,7 @@
 		"passport": "^0.5.0",
 		"passport-google-oauth20": "^2.0.0",
 		"puppeteer": "^15.5.0",
+		"rss-to-json": "^2.1.0",
 		"schema-validator": "^3.3.1",
 		"shelljs": "^0.8.4",
 		"sib-api-v3-sdk": "^8.4.2",
