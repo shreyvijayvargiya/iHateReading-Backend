@@ -26,6 +26,7 @@ import { scrapMediumArticles } from "../controllers/scrap/index.js";
 import { postTweet } from "../controllers/tweet/index.js";
 import { addGumroadTemplate } from "../controllers/templates/index.js";
 import rssToJson from "rss-to-json";
+import { getNotionData } from "../controllers/notion/index.js";
 
 const router = express.Router();
 
@@ -34,14 +35,13 @@ router.get("/", (req, res) => {
 });
 router.get("/v1/custom-repo/login", firebaseLogin);
 
+// custom repo download api
 router.post("/v1/custom-repo/download-repo", (req, res) =>
 	downloadRepo(req, res)
 );
 
-router.get("/v1/ejs", (req, res) => {
-	res.render("server");
-});
 
+// google auth api
 router.get(
 	"/v1/auth/google",
 	passport.authenticate("google", {
@@ -49,7 +49,6 @@ router.get(
 		scope: ["profile", "email"],
 	})
 );
-
 router.get(
 	"/auth/google/callback",
 	passport.authenticate("google", { failureRedirect: "/" }),
@@ -59,7 +58,7 @@ router.get(
 	}
 );
 
-
+// codesandbox API
 router.post("/v1/deploy-custom-repo", (req, res) =>
 	createSandboxTreeFromRepoTree(req, res)
 );
@@ -77,33 +76,40 @@ router.get("/v1/preview", (req, res) => {
 router.post("/v1/get-meta-data", getMetadata);
 router.post("/v1/get-log-data", getLogDetail);
 
-router.post("/v1/api/sendLogEmail", sendLogEmail);
 
-router.get("/v1/api/logsEmail", (req, res) => {
-	res.render("logsEmail");
-});
-router.get("/v1/api/sendList", sendListToCourier);
-router.post("/v1/api/add-user-in-list", addUserInList);
-router.get("/v1/api/get-lists", getLists);
-router.get("/v1/api/signup-email", sendSignUpEmail);
-router.get("/v1/api/add-user", addRecipient);
+// sendinblue api for emailing
 router.post("/v1/api/sendinblue/send-email", sendEmailUsingSendInBlue);
 router.post("/v1/api/sendinblue/send-test-email", sendTestingEmailUsingSendInBlue);
 
 // gumroads
 router.get("/v1/api/gumroad/addTemplate", addGumroadTemplate);
 
+// notion apis
 router.get("/v1/api/notion-to-html", notiontohtml);
+
+// courier api for emails
+router.post("/v1/api/sendLogEmail", sendLogEmail);
+router.get("/v1/api/sendList", sendListToCourier);
+router.post("/v1/api/add-user-in-list", addUserInList);
+router.get("/v1/api/get-lists", getLists);
+router.get("/v1/api/signup-email", sendSignUpEmail);
+router.get("/v1/api/add-user", addRecipient);
 router.get("/v1/api/send-email-list-users", sendEmailToListUsers);
-
 router.post("/v1/api/send-first-email", sendFirstEmail);
+
+
+// medium api 
 router.get("/v1/api/get-medium-articles", scrapMediumArticles);
-
-router.get("/v1/api/postTweet", postTweet);
-
 router.get("/get-medium-blogs", async(req, res) => {
 	const data = await rssToJson("https://medium.com/feed/@shreyvijayvargiya26");
 	res.send(data);
 })
+
+// twitter api
+router.get("/v1/api/postTweet", postTweet);
+
+// notion api
+router.get("/v1/api/get-notion-page", getNotionData);
+
 
 export default router;
