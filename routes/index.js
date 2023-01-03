@@ -98,7 +98,7 @@ router.post("/v1/api/add-user-in-list", addUserInList);
 router.get("/v1/api/get-lists", getLists);
 router.get("/v1/api/signup-email", sendSignUpEmail);
 router.get("/v1/api/add-user", addRecipient);
-router.get("/v1/api/send-email-list-users", sendEmailToListUsers);
+router.post("/v1/api/send-email-list-users", sendEmailToListUsers);
 router.post("/v1/api/send-first-email", sendFirstEmail);
 
 
