@@ -21,12 +21,15 @@ import {
 	notiontohtml,
 	sendEmailUsingSendInBlue,
 	sendTestingEmailUsingSendInBlue,
+	checkSendEmails,
+	createTemplateAndSendEmail,
 } from "../controllers/email/index.js";
 import { scrapMediumArticles } from "../controllers/scrap/index.js";
 import { postTweet } from "../controllers/tweet/index.js";
 import { addGumroadTemplate } from "../controllers/templates/index.js";
 import rssToJson from "rss-to-json";
 import { getNotionData } from "../controllers/notion/index.js";
+import { getDataFromOpenAI } from "../controllers/openai/index.js";
 
 const router = express.Router();
 
@@ -80,7 +83,8 @@ router.post("/v1/get-log-data", getLogDetail);
 // sendinblue api for emailing
 router.post("/v1/api/sendinblue/send-email", sendEmailUsingSendInBlue);
 router.post("/v1/api/sendinblue/send-test-email", sendTestingEmailUsingSendInBlue);
-
+router.get("/v1/api/sendinblue/check-send-emails", checkSendEmails);
+router.get("/email-templates", createTemplateAndSendEmail);;
 // gumroads
 router.get("/v1/api/gumroad/addTemplate", addGumroadTemplate);
 
@@ -112,4 +116,6 @@ router.get("/v1/api/postTweet", postTweet);
 router.get("/v1/api/get-notion-page", getNotionData);
 
 
+// openai API
+router.post("/v1/api/get-openai-data", getDataFromOpenAI);
 export default router;

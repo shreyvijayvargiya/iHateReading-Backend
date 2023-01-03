@@ -9,3 +9,8 @@ export const getNotionData = async(req, res) => {
 	});
   res.send(data);
 }
+
+// automate the notion table creating process
+
+
+// Take user input in JSON, Yaml or simple text format for forms and create notion table out of it and even store it in database 
