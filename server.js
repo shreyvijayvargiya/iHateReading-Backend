@@ -8,6 +8,7 @@ import path from "path";
 import router from "./routes/index.js";
 import compression from "compression";
 
+
 dotenv.config();
 
 const server = express();
@@ -27,14 +28,16 @@ server.engine(
 
 // server.use(passport.initialize());
 
+// Firebase initialization
 admin.initializeApp({
 	credential: admin.credential.cert("./service-account-file.json"),
 	databaseURL: process.env.FIREBASE_DATABASE_URL,
 	projectId: process.env.FIREBASE_PROJECT_ID,
-	
 });
-
 admin.firestore().settings({ ignoreUndefinedProperties: true })
+
+// Supabase initialization
+
 
 server.use(
 	compression({

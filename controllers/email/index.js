@@ -337,3 +337,20 @@ export const notiontohtml = async (req, res) => {
 	);
 	res.send(html);
 };
+// 
+export const sendEmailToSubscriber = async(req, res) => {
+	const email = req.body.email;
+	const userName = email.split("@")[0]
+	const { requestId } = await courier.send({
+		message: {
+			data: {
+				name: userName,
+			},
+			to: {
+				email,
+			},
+			template: "AJ2RYFKPXNMFHJPDM3B2JB43ENS7",
+		},
+	});
+	res.send(requestId)
+}

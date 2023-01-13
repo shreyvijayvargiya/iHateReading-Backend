@@ -23,13 +23,14 @@ import {
 	sendTestingEmailUsingSendInBlue,
 	checkSendEmails,
 	createTemplateAndSendEmail,
+	sendEmailToSubscriber,
 } from "../controllers/email/index.js";
 import { scrapMediumArticles } from "../controllers/scrap/index.js";
 import { postTweet } from "../controllers/tweet/index.js";
 import { addGumroadTemplate } from "../controllers/templates/index.js";
 import rssToJson from "rss-to-json";
 import { getNotionData } from "../controllers/notion/index.js";
-import { getDataFromOpenAI } from "../controllers/openai/index.js";
+import { basicOpenAIAPI, getDataFromOpenAI, getNotionSteps, getNotionTools, getPromptImage, pushNotionToolsInDatabase } from "../controllers/openai/index.js";
 
 const router = express.Router();
 
@@ -76,8 +77,9 @@ router.get("/v1/preview", (req, res) => {
 	res.send("Done");
 });
 
-router.post("/v1/get-meta-data", getMetadata);
-router.post("/v1/get-log-data", getLogDetail);
+// get metadata from URL
+router.post("/v1/api/get-meta-data", getMetadata);
+router.post("/v1/api/get-log-data", getLogDetail);
 
 
 // sendinblue api for emailing
@@ -100,7 +102,7 @@ router.get("/v1/api/signup-email", sendSignUpEmail);
 router.get("/v1/api/add-user", addRecipient);
 router.post("/v1/api/send-email-list-users", sendEmailToListUsers);
 router.post("/v1/api/send-first-email", sendFirstEmail);
-
+router.post("/v1/api/send-subscriber-email", sendEmailToSubscriber);
 
 // medium api 
 router.get("/v1/api/get-medium-articles", scrapMediumArticles);
@@ -115,7 +117,14 @@ router.get("/v1/api/postTweet", postTweet);
 // notion api
 router.get("/v1/api/get-notion-page", getNotionData);
 
-
 // openai API
 router.post("/v1/api/get-openai-data", getDataFromOpenAI);
+router.post("/v1/api/get-notion-steps", getNotionSteps);
+router.post("/v1/api/get-notion-tools", getNotionTools)
+router.post("/v1/api/get-image", getPromptImage)
+router.post("/v1/api/get-basic-api", basicOpenAIAPI)
+
+// Notionopedia API
+router.post("/v1/api/push-notion-tools-in-database", pushNotionToolsInDatabase)
+
 export default router;
