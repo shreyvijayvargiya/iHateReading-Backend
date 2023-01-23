@@ -81,7 +81,7 @@ export const sendListToCourier = async (req, res) => {
 	try {
 		lists.map(async (item) => {
 			await courier.lists.put(item.email, {
-				name: "Emails lists ",
+				name: "Subscribers lists",
 				id: item.id,
 			});
 		});
@@ -183,25 +183,31 @@ export const sendFirstEmail = async (req, res) => {
 };
 
 export const sendEmailToListUsers = async (req, res) => {
-	const { list, templateId } = req.body;
+	const { list } = req.body;
 	try {
-		if(!templateId && !list) throw new Error("Please send template id and list")
+		if(!list) throw new Error("Please add list of users you want to send email")
 		const users = await admin
 			.firestore()
 			.collection("subscribers")
 			.doc("list")
 			.get();
 		const toData = users.data()[list].map((item) => ({ email: item }));
-		const { requestId } = await courier.send({
-			message: {
-				to: toData,
-				template: templateId,
-			},
+		
+		await courier({
+			name: "Testing Email template",
+			html: "<div><h1>Testing email using API</h1></div>",
+			subject: "Testing email"
 		});
-		res.json({ requestId: requestId, message: "Email sent to the users" });
+		// const { requestId } = await courier.send({
+		// 	message: {
+		// 		to: toData,
+		// 		template: templateId,
+		// 	},
+		// });
+		res.json({ requestId: "Done", message: "Email sent to the users" });
 	} catch (e) {
 		console.log(e, "error in sending email");
-		res.send("Error in sending email to the list users");
+		res.send("Error, check console");
 	}
 };
 
@@ -220,23 +226,48 @@ export const addRecipient = async (req, res) => {
 
 export const sendEmailUsingSendInBlue = async (req, res) => {
 	const tranEmailApi = new Sib.TransactionalEmailsApi();
-	const { subject, body } = req.body;
+	const { subject, body, list } = req.body;
 	let response = {
 		error: false,
-		success: true,
+		success: true, 
 		data: null,
 		status: 200,
 	};
-	if (!body || !subject) {
-		response.error = "Please add body and subject";
+	if (!body || !subject || !list) {
+		response.error = "Please add body and subject and list";
 		response.status = 400;
 		response.success = false;
 		response.data = "Body and subject are required";
 	} else {
 		const sender = {
-			email: "shreyvijayvargiya26@gmail.com",
+			email: "hello@iamshrey.me",
 			name: "Shrey",
 		};
+		const html = `<!Doctype html>
+<head>
+  <style type="text/css">
+   @media only screen and (max-width: 600px) {
+  /* Mobile-specific CSS */
+  .parent {
+    width: 100%;
+  }
+}
+
+@media only screen and (min-width: 600px) {
+  /* Desktop-specific CSS */
+  .parent {
+    width: 50%;
+    margin: auto;
+  }
+}
+  </style>
+</head>
+<body>
+  <div class="parent">
+    ${body}
+  </div>
+</body>
+</html>`;
 		const users = await admin
 			.firestore()
 			.collection("subscribers")
@@ -244,13 +275,13 @@ export const sendEmailUsingSendInBlue = async (req, res) => {
 			.get();
 		const receivers = users
 			.data()
-			["newsletters"].map((item) => ({ email: item }));
+			[list].map((item) => ({ email: item }));
 		await tranEmailApi
 			.sendTransacEmail({
 				sender,
 				to: receivers,
 				subject: subject,
-				htmlContent: body,
+				htmlContent: html,
 			})
 			.then((data) => {
 				response.data = data;

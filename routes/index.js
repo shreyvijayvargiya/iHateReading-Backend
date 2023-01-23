@@ -40,6 +40,11 @@ import {
 } from "../controllers/openai/index.js";
 import xlsxFile from "read-excel-file/node";
 import admin from "firebase-admin";
+import axios from "axios";
+import * as cheerio from "cheerio";
+import fs from "fs";
+
+
 
 const router = express.Router();
 
@@ -140,27 +145,42 @@ router.post("/v1/api/push-notion-tools-in-database", pushNotionToolsInDatabase);
 // Excel reading API
 router.get("/read-excel", async (req, res) => {
 	const users = [];
-	await xlsxFile(process.cwd() + "/React-Native-Scrapping.xlsx").then(
-		(rows) => {
-			rows.forEach((col, index) => {
-				const name = col[0];
-				const yearsOfExperience = col[1];
-				const email = col[2];
-				if (index > 0)
-					users.push({ email: JSON.parse(email), name, yearsOfExperience });
-			});
-		}
-	);
+	await xlsxFile(process.cwd() + "/Java-Scrapping.xlsx").then((rows) => {
+		rows.forEach((col, index) => {
+			const name = col[0];
+			const email = col[1];
+			if (index > 0)
+				users.push({ email: JSON.parse(email), name });
+		});
+	});
 	let emails = [];
+	
 	users.forEach((item) => {
-		if (item.email.length > 0) {
+		if (item.email && item?.email?.length > 0) {
 			emails.push(item.email[0]);
 		}
 	});
-	admin.firestore().collection("subscribers").doc("githubUsers").set({
-		emails,
+	admin.firestore().collection("subscribers").doc("list").update({
+		javaUsers: emails,
 	});
-	res.send(users);
+	res.send(emails);
 });
+
+router.post("/v1/api/get-medium-article", async(req, res)=> {
+	const url = "https://medium2.p.rapidapi.com/article/8738ce62ffbc/markdown";
+	const data = await axios.get(url, {
+		"x-rapidapi-key": process.env.MEDIUM_TOKEN,
+	});
+	console.log(data, "data");
+	res.send("Done");
+})
+
+router.post("/push-emails", async(req, res) => {
+	const data = req.body.data;
+	await admin.firestore().collection("subscribers").doc("list").update({
+		newsletters: admin.firestore.FieldValue.arrayUnion(...data)
+	});
+	res.send("Emails Added")
+})
 
 export default router;
