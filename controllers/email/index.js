@@ -99,26 +99,26 @@ export const getLists = async (req, res) => {
 
 export const addUserInList = async (req, res) => {
 	try {
-		const newsletters = await (
-			await admin.database().ref("users").once("value")
-		).val();
+		const { finalEmails } = req.body;
+		// const newsletters = await (
+		// 	await admin.firestore().collection("subscribers").doc("list").get()
+		// ).data()["newsletters"];
 		// const users = await (await admin.auth().listUsers(300)).users;
-		// let finalEmails = []
-		// users.filter(item =>{ if(!newsletters.includes(item.email) && item.email && item.email !== null){ finalEmails.push(item.email) }else return undefined });
-		const finalEmails = Object.keys(newsletters).filter(
-			(item) => newsletters[item]["userEmail"]
-		);
-		const newsletter = finalEmails.map((item) => {
-			return newsletters[item]["userEmail"];
-		});
-		admin
+		// const finalEmails = [];
+		// users.forEach(item => {
+		// 	if(!newsletters.includes(item.email) && item.email) finalEmails.push(item.email);
+		// 	else return
+		// });
+		// if(finalEmails){
+		await admin
 			.firestore()
 			.collection("subscribers")
 			.doc("list")
 			.update({
-				newsletters: admin.firestore.FieldValue.arrayUnion(...newsletter),
-			});
-		res.json(newsletter);
+				newsletters: admin.firestore.FieldValue.arrayUnion(...finalEmails),
+		});
+		// }
+		res.json(finalEmails);
 	} catch (e) {
 		console.log(e, "error");
 		res.send("Error in adding email in the lists");
@@ -183,7 +183,7 @@ export const sendFirstEmail = async (req, res) => {
 };
 
 export const sendEmailToListUsers = async (req, res) => {
-	const { list } = req.body;
+	const { list, templateId } = req.body;
 	try {
 		if(!list) throw new Error("Please add list of users you want to send email")
 		const users = await admin
@@ -192,19 +192,13 @@ export const sendEmailToListUsers = async (req, res) => {
 			.doc("list")
 			.get();
 		const toData = users.data()[list].map((item) => ({ email: item }));
-		
-		await courier({
-			name: "Testing Email template",
-			html: "<div><h1>Testing email using API</h1></div>",
-			subject: "Testing email"
+		const { requestId } = await courier.send({
+			message: {
+				to: toData,
+				template: templateId,
+			},
 		});
-		// const { requestId } = await courier.send({
-		// 	message: {
-		// 		to: toData,
-		// 		template: templateId,
-		// 	},
-		// });
-		res.json({ requestId: "Done", message: "Email sent to the users" });
+		res.json({ requestId: requestId, message: "Email sent to the users" });
 	} catch (e) {
 		console.log(e, "error in sending email");
 		res.send("Error, check console");
@@ -216,6 +210,16 @@ export const addRecipient = async (req, res) => {
 		recipientId: req.body.id,
 		profile: { email: req.body.email },
 	});
+	res.send({
+		success: true,
+		message: "User added",
+		data: recipientId,
+		error: false,
+	});
+};
+
+export const addUserToSubscribersList = async (req, res) => {
+
 	res.send({
 		success: true,
 		message: "User added",
