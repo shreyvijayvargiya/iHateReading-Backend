@@ -1,10 +1,11 @@
 import axios from "axios";
 import admin from "firebase-admin";
 
-const url = `https://api.gumroad.com/v2/products/FQOqkH9RelgkwcZkGHQZXw==`;
+const url = `https://api.gumroad.com/v2/products/`;
 
 export const addGumroadTemplate = async (req, res) => {
-	const data = await axios.get(url, {
+	const id = "FQOqkH9RelgkwcZkGHQZXw==";
+	const data = await axios.get(url + id, {
 		data: {
 			access_token: process.env.GUMROAD_ACCESS_TOKEN,
 		},
@@ -23,4 +24,25 @@ export const addGumroadTemplate = async (req, res) => {
 	};
 	await admin.firestore().collection("templates").add(template);
 	res.send({ status: "success", message: "Added" });
+};
+
+export const latestTemplates = async (req, res) => {
+	const data = await axios.get(url, {
+		data: {
+			access_token: process.env.GUMROAD_ACCESS_TOKEN,
+		},
+	});
+	const ids = [];
+	data.data.products.filter((item) => {
+		ids.push(item.id);
+	});
+	const firebaseIds = [];
+	(await admin.firestore().collection("templates").get()).docs?.map((item) => {
+		firebaseIds.push(item.data().id);
+	});
+	const remainingIds = ids.filter((item) => !firebaseIds.includes(item));
+	const finalData = data.data.products.filter((item) =>
+		remainingIds.includes(item.id) ? item : null
+	);
+	res.send(finalData);
 };

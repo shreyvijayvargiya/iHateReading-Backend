@@ -3,6 +3,12 @@ import axios from "axios";
 import { XMLParser } from "fast-xml-parser";
 import xmlParser from "xml2js";
 
+const isValidLink = (email) => {
+	const urlRegex =
+		/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)?/gi;
+	return urlRegex.test(email);
+};
+
 export const scrapLink = async (req, res) => {
 	let response = {
 		success: false,
@@ -11,6 +17,7 @@ export const scrapLink = async (req, res) => {
 		error: null,
 	};
 	try {
+		// check URL validity console.log(isValidLink(req.body.url), "rfrf");
 		const data = await axios.get(req.body.url);
 		const $ = load(data.data);
 		const impMetaTags = [
@@ -45,7 +52,7 @@ export const scrapLink = async (req, res) => {
 		response.success = true;
 		res.send(response);
 	} catch (e) {
-		console.log(e, "error");
+		// console.log(e, "error");
 		response.success = false;
 		response.status = e.response?.status;
 		response.error = e.response?.statusText;

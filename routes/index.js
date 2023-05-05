@@ -14,7 +14,7 @@ import {
 	sendEmailToSubscriber,
 } from "../controllers/email/index.js";
 import { postTweet } from "../controllers/tweet/index.js";
-import { addGumroadTemplate } from "../controllers/templates/index.js";
+import { addGumroadTemplate, latestTemplates } from "../controllers/templates/index.js";
 
 const router = express.Router();
 
@@ -53,6 +53,7 @@ router.post(
 );
 
 router.get("/v1/api/gumroad/addTemplate", addGumroadTemplate);
+router.get("/v1/api/latest-templates", latestTemplates)
 
 // courier api for emails
 router.post("/v1/api/sendLogEmail", sendLogEmail);
