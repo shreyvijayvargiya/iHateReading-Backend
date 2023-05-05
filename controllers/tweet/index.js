@@ -22,7 +22,7 @@ const twitterClient = new TwitterApi({
 
 export const postTweet = async (req, res) => {
 	try {
-		const threads = await admin.firestore().collection("threads").get();
+		const threads = await admin.firestore().collection("threads").orderBy('timeStamp', "desc").get();
 		const allThreads = threads.docs.map((doc) => ({
 			id: doc.id,
 			...doc.data(),
@@ -33,7 +33,7 @@ export const postTweet = async (req, res) => {
 				return { message: "Done" };
 			});
 		const threadIds = _.shuffle(allThreads).slice(0, 5);
-		const times = [15, 16, 17, 18, 19];
+		const times = [19, 20, 21, 22, 23];
 		threadIds.forEach((log, index) => {
 			const tweet = cron.schedule(
 				`1 ${times[index]} * * *

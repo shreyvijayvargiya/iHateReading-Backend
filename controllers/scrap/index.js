@@ -1,76 +1,87 @@
-import puppeteer from "puppeteer";
-import urlMetaData from "url-metadata";
+import { load } from "cheerio";
+import axios from "axios";
+import { XMLParser } from "fast-xml-parser";
+import xmlParser from "xml2js";
 
 export const scrapLink = async (req, res) => {
-	const response = {
+	let response = {
+		success: false,
+		status: null,
 		data: null,
-		message: "",
-		error: false,
+		error: null,
 	};
-	const link = req.body.link;
-	if (!link) {
-		response.error = true;
-		response.message = "Please send link";
+	try {
+		const data = await axios.get(req.body.url);
+		const $ = load(data.data);
+		const impMetaTags = [
+			"og:title",
+			"og:description",
+			"og:keywords",
+			"og:image",
+			"twitter:title",
+			"twitter:description",
+			"twitter:image",
+			"twitter:keywords",
+			"keywords",
+			"author",
+		];
+		const finalTags = [];
+		const title = $("title:first").text();
+		$("meta").map(function (item) {
+			const name = $(this).attr("name")
+				? $(this).attr("name")
+				: $(this).attr("property");
+			if (impMetaTags.includes(name)) {
+				return finalTags.push({
+					name,
+					value: $(this).attr("value")
+						? $(this).attr("value")
+						: $(this).attr("content"),
+				});
+			}
+		});
+		response.data = [{ name: "title", value: title }, ...finalTags];
+		response.status = data.status;
+		response.success = true;
 		res.send(response);
-	} else {
-		try {
-			const browser = await puppeteer.launch({
-				headless: false,
-				ignoreDefaultArgs: ["--disable-extensions"],
-			});
-			const page = await browser.newPage();
-			await page.goto(link);
-			const title = await page.title();
-			let h1, h2, thumbnail;
-			const metadata = await urlMetaData(link);
-			if ((await page.$("h1")) !== null) {
-				await page.waitForSelector("h1", { timeout: 5000 });
-				h1 = await page.$("h1");
-				h1 = await page.evaluate((element) => element.textContent, h1);
-			}
-			if ((await page.$("h2")) !== null) {
-				await page.waitForSelector("h2", { timeout: 5000 });
-				h2 = await page.$("h2");
-				h2 = await page.evaluate((element) => element.textContent, h2);
-			}
-			response.data = {
-				title,
-				h1,
-				h2,
-				link,
-			};
-			res.send(response);
-		} catch (e) {
-			console.log(e, "e");
-			res.send({
-				data: null,
-				error: true,
-				message: e,
-			});
-		}
+	} catch (e) {
+		console.log(e, "error");
+		response.success = false;
+		response.status = e.response?.status;
+		response.error = e.response?.statusText;
+		res.send(response);
 	}
 };
 
-export const scrapMediumArticles = async (req, res) => {
+export const scrapFromRSSFeed = async (req, res) => {
+	// data axios.get(rss feed url)
+	// data should be an array
+	// what is RSS feed is not available first let's do this only
+	let data = {
+		data: null,
+		status: Number,
+		error: null,
+	};
 	try {
-		const browser = await puppeteer.launch();
-		const page = await browser.newPage();
-		await page.goto("https://medium.com/me/stories/drafts");
-		const data = await page.evaluate(() => {
-			console.log("page loaded");
-			const stories = document.querySelectorAll(".draftStory");
-			return Array.from(stories).map((story) => {
-				return {
-					title: story.querySelector(".draftStory-title").innerText,
-					subtitle: story.querySelector(".draftStory-subtitle").innerText,
-					date: story.querySelector(".draftStory-date").innerText,
-				};
-			});
+		const url = req.body.url;
+		const response = await axios.get(url);
+		const parser = new XMLParser();
+		parser.parse(response.data);
+		xmlParser.parseString(response.data, (err, result) => {
+			if (err) {
+				throw Error(err);
+			}
+			console.log(result);
+			// the hindu rss items destination data.data = JSON.stringify(result.rss.channel[0].item);
+			// for every rss feed url we need to find which key contains the items and send it back to the database
+			data.status = 200;
+			res.error = null;
 		});
-		console.log(data);
-		await browser.close();
-	} catch (error) {
-		console.log(error, "error");
-		res.send("Error");
+		res.send(JSON.parse(data.data));
+	} catch (e) {
+		data.status = 500;
+		data.error = "";
+		console.log(e, "e");
+		res.json(data);
 	}
 };

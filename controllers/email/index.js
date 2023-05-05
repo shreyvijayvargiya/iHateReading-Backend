@@ -1,8 +1,6 @@
 import { courier } from "../../utils/CourierClient.js";
 import admin from "firebase-admin";
-import NotionPageToHtml from "notion-page-to-html";
 import Sib from "sib-api-v3-sdk";
-import axios from "axios";
 
 const client = Sib.ApiClient.instance;
 const apiKey = client.authentications["api-key"];
@@ -60,13 +58,6 @@ export const sendLogEmail = async (req, res) => {
 	}
 };
 
-export const createTemplateAndSendEmail = async(req, res) => {
-	const { subject, body } = req.body;
-	const templates = await courier.notifications.postVariations()
-	console.log(templates);
-	res.send("Done")
-};
-
 export const sendListToCourier = async (req, res) => {
 	const db = admin.database().ref("users");
 	const users = (await db.once("value")).val();
@@ -89,39 +80,6 @@ export const sendListToCourier = async (req, res) => {
 	} catch (e) {
 		console.log(e);
 		res.send({ error: e, data: null });
-	}
-};
-
-export const getLists = async (req, res) => {
-	const lists = await courier.lists.list();
-	res.send(lists);
-};
-
-export const addUserInList = async (req, res) => {
-	try {
-		const { finalEmails } = req.body;
-		// const newsletters = await (
-		// 	await admin.firestore().collection("subscribers").doc("list").get()
-		// ).data()["newsletters"];
-		// const users = await (await admin.auth().listUsers(300)).users;
-		// const finalEmails = [];
-		// users.forEach(item => {
-		// 	if(!newsletters.includes(item.email) && item.email) finalEmails.push(item.email);
-		// 	else return
-		// });
-		// if(finalEmails){
-		await admin
-			.firestore()
-			.collection("subscribers")
-			.doc("list")
-			.update({
-				newsletters: admin.firestore.FieldValue.arrayUnion(...finalEmails),
-		});
-		// }
-		res.json(finalEmails);
-	} catch (e) {
-		console.log(e, "error");
-		res.send("Error in adding email in the lists");
 	}
 };
 
@@ -185,7 +143,8 @@ export const sendFirstEmail = async (req, res) => {
 export const sendEmailToListUsers = async (req, res) => {
 	const { list, templateId } = req.body;
 	try {
-		if(!list) throw new Error("Please add list of users you want to send email")
+		if (!list)
+			throw new Error("Please add list of users you want to send email");
 		const users = await admin
 			.firestore()
 			.collection("subscribers")
@@ -205,21 +164,8 @@ export const sendEmailToListUsers = async (req, res) => {
 	}
 };
 
-export const addRecipient = async (req, res) => {
-	const { status: recipientId } = await courier.replaceProfile({
-		recipientId: req.body.id,
-		profile: { email: req.body.email },
-	});
-	res.send({
-		success: true,
-		message: "User added",
-		data: recipientId,
-		error: false,
-	});
-};
-
 export const addUserToSubscribersList = async (req, res) => {
-
+	const users = await (await admin.auth().listUsers(300)).users;
 	res.send({
 		success: true,
 		message: "User added",
@@ -233,7 +179,7 @@ export const sendEmailUsingSendInBlue = async (req, res) => {
 	const { subject, body, list } = req.body;
 	let response = {
 		error: false,
-		success: true, 
+		success: true,
 		data: null,
 		status: 200,
 	};
@@ -277,9 +223,7 @@ export const sendEmailUsingSendInBlue = async (req, res) => {
 			.collection("subscribers")
 			.doc("list")
 			.get();
-		const receivers = users
-			.data()
-			[list].map((item) => ({ email: item }));
+		const receivers = users.data()[list].map((item) => ({ email: item }));
 		await tranEmailApi
 			.sendTransacEmail({
 				sender,
@@ -351,31 +295,9 @@ export const sendTestingEmailUsingSendInBlue = async (req, res) => {
 	res.send(response);
 };
 
-export const checkSendEmails = async (req, res) => {
-	const apiKey = process.env.SEND_IN_BLUE_KEY;
-	const response = await axios.get(
-		"https://api.sendinblue.com/v3/smtp/emails", {
-			params: { "limit": 10, "offset": 0 },
-			headers: {
-				"api-key": apiKey
-			}
-		}
-	);
-	console.log(response.json()["result"]);
-	res.send("Done")
-};
-
-export const notiontohtml = async (req, res) => {
-	const { title, icon, cover, html } = await NotionPageToHtml.convert(
-		req.body.url,
-		{ excludeHeaderFromBody: true }
-	);
-	res.send(html);
-};
-// 
-export const sendEmailToSubscriber = async(req, res) => {
+export const sendEmailToSubscriber = async (req, res) => {
 	const email = req.body.email;
-	const userName = email.split("@")[0]
+	const userName = email.split("@")[0];
 	const { requestId } = await courier.send({
 		message: {
 			data: {
@@ -387,5 +309,5 @@ export const sendEmailToSubscriber = async(req, res) => {
 			template: "AJ2RYFKPXNMFHJPDM3B2JB43ENS7",
 		},
 	});
-	res.send(requestId)
-}
+	res.send(requestId);
+};

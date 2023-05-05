@@ -7,12 +7,17 @@ import handlebars from "express-handlebars";
 import path from "path";
 import router from "./routes/index.js";
 import compression from "compression";
+import multer from "multer";
+import './index.js';
 
+const forms = multer();
 dotenv.config();
 
 const server = express();
 server.use(bodyParser.json());
 server.use(bodyParser.urlencoded({ extended: true }));
+server.use(bodyParser.raw())
+server.use(forms.single('image'));
 server.use(cors("*"));
 
 server.set("view engine", "hbs");
@@ -24,8 +29,6 @@ server.engine(
 		extname: ".hbs",
 	})
 );
-
-// server.use(passport.initialize());
 
 // Firebase initialization
 admin.initializeApp({
