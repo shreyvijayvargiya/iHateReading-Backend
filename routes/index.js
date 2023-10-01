@@ -14,8 +14,23 @@ import {
 	sendEmailToSubscriber,
 } from "../controllers/email/index.js";
 import { postTweet } from "../controllers/tweet/index.js";
-import { addGumroadTemplate, latestTemplates } from "../controllers/templates/index.js";
-
+import {
+	addGumroadTemplate,
+	latestTemplates,
+} from "../controllers/templates/index.js";
+import {
+	getAllYogaAsanas,
+	getAllYogaPoses,
+	getDataFromOpenAI,
+	getSingleThreadTweet,
+	getYogaAsanasByGenderMood,
+	getYogaAsanasByTime,
+	getYogaAsanasForHealthProblems,
+	getYogaPostureImageFromUnSplash,
+	getYogaPostures,
+} from "../controllers/openai/index.js";
+import admin from "firebase-admin";
+import emailValidator from "deep-email-validator";
 const router = express.Router();
 
 router.get("/", (req, res) => {
@@ -53,7 +68,7 @@ router.post(
 );
 
 router.get("/v1/api/gumroad/addTemplate", addGumroadTemplate);
-router.get("/v1/api/latest-templates", latestTemplates)
+router.get("/v1/api/latest-templates", latestTemplates);
 
 // courier api for emails
 router.post("/v1/api/sendLogEmail", sendLogEmail);
@@ -67,5 +82,16 @@ router.post("/v1/api/send-subscriber-email", sendEmailToSubscriber);
 router.get("/v1/api/postTweet", postTweet);
 
 router.post("/scrap-url", scrapFromRSSFeed);
-
+router.post("/v1/api/getDataFromOpenAI", getDataFromOpenAI);
+router.post("/v1/api/getYogaPostures", getYogaPostures);
+router.get("/v1/api/yogaAsanas", getAllYogaAsanas);
+router.post("/v1/api/getYogaPoseImage", getYogaPostureImageFromUnSplash);
+router.get("/v1/api/getYogaByDayTime", getYogaAsanasByTime);
+router.post("/v1/api/getYogaAsanasByGenderMood", getYogaAsanasByGenderMood);
+router.post(
+	"/v1/api/getYogaAsanasForHealthProblems",
+	getYogaAsanasForHealthProblems
+);
+router.post("/v1/api/getAllYogaPoses", getAllYogaPoses);
+router.post("/v1/api/getSingleThreadTweet", getSingleThreadTweet);
 export default router;
