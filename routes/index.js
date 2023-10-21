@@ -4,14 +4,11 @@ import { firebaseLogin } from "../controllers/login/firebaseLogin.js";
 import { downloadRepo } from "../controllers/repo/downloadRepo.js";
 import { scrapFromRSSFeed, scrapLink } from "../controllers/scrap/index.js";
 import {
-	sendLogEmail,
-	sendListToCourier,
+	sendTestingEmail,
 	sendEmailToListUsers,
 	sendFirstEmail,
 	sendSignUpEmail,
-	sendEmailUsingSendInBlue,
-	sendTestingEmailUsingSendInBlue,
-	sendEmailToSubscriber,
+	addSubscriber,
 } from "../controllers/email/index.js";
 import { postTweet } from "../controllers/tweet/index.js";
 import {
@@ -29,8 +26,6 @@ import {
 	getYogaPostureImageFromUnSplash,
 	getYogaPostures,
 } from "../controllers/openai/index.js";
-import admin from "firebase-admin";
-import emailValidator from "deep-email-validator";
 const router = express.Router();
 
 router.get("/", (req, res) => {
@@ -60,28 +55,22 @@ router.get(
 
 router.post("/v1/api/get-link-tags", scrapLink);
 
-// sendinblue api for emailing
-router.post("/v1/api/sendinblue/send-email", sendEmailUsingSendInBlue);
-router.post(
-	"/v1/api/sendinblue/send-test-email",
-	sendTestingEmailUsingSendInBlue
-);
-
 router.get("/v1/api/gumroad/addTemplate", addGumroadTemplate);
 router.get("/v1/api/latest-templates", latestTemplates);
 
-// courier api for emails
-router.post("/v1/api/sendLogEmail", sendLogEmail);
-router.get("/v1/api/sendList", sendListToCourier);
+// courier api for email
 router.get("/v1/api/signup-email", sendSignUpEmail);
+router.get("/v1/api/addSubscriber", addSubscriber);
+router.post("/v1/api/send-testing-email", sendTestingEmail);
 router.post("/v1/api/send-email-list-users", sendEmailToListUsers);
 router.post("/v1/api/send-first-email", sendFirstEmail);
-router.post("/v1/api/send-subscriber-email", sendEmailToSubscriber);
 
 // twitter api
 router.get("/v1/api/postTweet", postTweet);
 
 router.post("/scrap-url", scrapFromRSSFeed);
+
+// open AI APIs
 router.post("/v1/api/getDataFromOpenAI", getDataFromOpenAI);
 router.post("/v1/api/getYogaPostures", getYogaPostures);
 router.get("/v1/api/yogaAsanas", getAllYogaAsanas);
@@ -94,4 +83,5 @@ router.post(
 );
 router.post("/v1/api/getAllYogaPoses", getAllYogaPoses);
 router.post("/v1/api/getSingleThreadTweet", getSingleThreadTweet);
+
 export default router;
