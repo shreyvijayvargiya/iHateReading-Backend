@@ -1,10 +1,10 @@
 import { load } from "cheerio";
 import axios from "axios";
 import { XMLParser } from "fast-xml-parser";
-import xmlParser from "xml2js";
-
+import RssParser from "rss-parser";
 
 export const scrapLink = async (req, res) => {
+	const { url } = req.body;
 	let response = {
 		success: false,
 		status: null,
@@ -12,7 +12,7 @@ export const scrapLink = async (req, res) => {
 		error: null,
 	};
 	try {
-		const data = await axios.get(req.body.url);
+		const data = await axios.get(url);
 		const $ = load(data.data);
 		const impMetaTags = [
 			"og:title",
@@ -26,21 +26,21 @@ export const scrapLink = async (req, res) => {
 			"keywords",
 			"author",
 		];
-		const finalTags = [];
+		const finalTags = {};
 		const title = $("title:first").text();
-		$("meta").map(function (item) {
+		$("meta").map((item) => {
 			const name = $(this).attr("name")
 				? $(this).attr("name")
 				: $(this).attr("property");
 			if (impMetaTags.includes(name)) {
-				return finalTags.push({
-					name,
-					value: $(this).attr("value")
+				return (finalTags[name] = {
+					[name]: $(this).attr("value")
 						? $(this).attr("value")
 						: $(this).attr("content"),
 				});
 			}
 		});
+		console.log(finalTags);
 		response.data = [{ name: "title", value: title }, ...finalTags];
 		response.status = data.status;
 		response.success = true;
@@ -54,35 +54,53 @@ export const scrapLink = async (req, res) => {
 	}
 };
 
-export const scrapFromRSSFeed = async (req, res) => {
-	// data axios.get(rss feed url)
-	// data should be an array
-	// what is RSS feed is not available first let's do this only
-	let data = {
+export const scrapMetaTags = async (req, res) => {
+	let response = {
 		data: null,
 		status: Number,
 		error: null,
 	};
 	try {
-		const url = req.body.url;
-		const response = await axios.get(url);
-		const parser = new XMLParser();
-		parser.parse(response.data);
-		xmlParser.parseString(response.data, (err, result) => {
-			if (err) {
-				throw Error(err);
+		const data = await axios.get(req.body.url);
+		const $ = load(data.data, { xmlMode: true });
+
+		const items = [];
+		
+		$("meta").each((index, element) => {
+			if(element.name === 'meta'){
+				items.push({
+					name: element.attribs.name || element.attribs.property,
+					value: element.attribs.content,
+				});
+			}else {
+				return null
 			}
-			console.log(result);
-			// the hindu rss items destination data.data = JSON.stringify(result.rss.channel[0].item);
-			// for every rss feed url we need to find which key contains the items and send it back to the database
-			data.status = 200;
-			res.error = null;
 		});
-		res.send(JSON.parse(data.data));
+		res.send(items);
 	} catch (e) {
-		data.status = 500;
-		data.error = "";
+		response.status = 500;
+		response.error = "";
 		console.log(e, "e");
-		res.json(data);
+		res.json(response);
 	}
 };
+
+export const scrapRSSFeed = async(req, res) => {
+	let response = {
+		success: false,
+		status: null,
+		data: null,
+		error: null,
+	};
+	try{
+		const {url} = req.body;
+		const parser = new RssParser();
+		const parsed = await parser.parseURL(url);
+		response.data = parsed;
+		res.send(response)
+	}catch(e){
+		console.log(e, 'error');
+		response.error = e;
+		res.send(response)
+	}
+}

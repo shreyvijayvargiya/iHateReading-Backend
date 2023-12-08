@@ -2,7 +2,11 @@ import express from "express";
 import passport from "passport";
 import { firebaseLogin } from "../controllers/login/firebaseLogin.js";
 import { downloadRepo } from "../controllers/repo/downloadRepo.js";
-import { scrapFromRSSFeed, scrapLink } from "../controllers/scrap/index.js";
+import {
+	scrapMetaTags,
+	scrapLink,
+	scrapRSSFeed,
+} from "../controllers/scrap/index.js";
 import {
 	sendTestingEmail,
 	sendEmailToListUsers,
@@ -53,8 +57,14 @@ router.get(
 	}
 );
 
-router.post("/v1/api/get-link-tags", scrapLink);
 
+// scrap link or website routes
+router.post("/v1/api/get-link-tags", scrapLink);
+router.post("/v1/api/get-meta-tags", scrapMetaTags);
+router.post("/v1/api/scrap-rss-feed", scrapRSSFeed);
+
+
+// gumroad API routes
 router.get("/v1/api/gumroad/addTemplate", addGumroadTemplate);
 router.get("/v1/api/latest-templates", latestTemplates);
 
@@ -67,8 +77,6 @@ router.post("/v1/api/send-first-email", sendFirstEmail);
 
 // twitter api
 router.get("/v1/api/postTweet", postTweet);
-
-router.post("/scrap-url", scrapFromRSSFeed);
 
 // open AI APIs
 router.post("/v1/api/getDataFromOpenAI", getDataFromOpenAI);
