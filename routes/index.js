@@ -14,7 +14,7 @@ import {
 	sendSignUpEmail,
 	addSubscriber,
 } from "../controllers/email/index.js";
-import { postTweet } from "../controllers/tweet/index.js";
+import { postTweet, fetchTweetContent } from "../controllers/tweet/index.js";
 import {
 	addGumroadTemplate,
 	latestTemplates,
@@ -30,6 +30,7 @@ import {
 	getYogaPostureImageFromUnSplash,
 	getYogaPostures,
 } from "../controllers/openai/index.js";
+import { getIndianCuisine } from "../controllers/aggregator/index.js";
 const router = express.Router();
 
 router.get("/", (req, res) => {
@@ -57,7 +58,6 @@ router.get(
 	}
 );
 
-
 // scrap link or website routes
 router.post("/v1/api/get-link-tags", scrapLink);
 router.post("/v1/api/get-meta-tags", scrapMetaTags);
@@ -77,6 +77,7 @@ router.post("/v1/api/send-first-email", sendFirstEmail);
 
 // twitter api
 router.get("/v1/api/postTweet", postTweet);
+router.post("/v1/api/fetch-tweet-content", fetchTweetContent);
 
 // open AI APIs
 router.post("/v1/api/getDataFromOpenAI", getDataFromOpenAI);
@@ -92,4 +93,8 @@ router.post(
 router.post("/v1/api/getAllYogaPoses", getAllYogaPoses);
 router.post("/v1/api/getSingleThreadTweet", getSingleThreadTweet);
 
+router.get("/v1/api/getIndianCuisines", getIndianCuisine);
+
+// aggregator APIs
+router.post("/v1/api/getFeeds", () => {});
 export default router;

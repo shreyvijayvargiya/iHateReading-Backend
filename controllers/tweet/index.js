@@ -56,3 +56,23 @@ export const postTweet = async (req, res) => {
 		res.send("Error");
 	}
 };
+
+export const fetchTweetContent = async(req, res) =>{
+	let response = {
+		status: null,
+		success: false,
+		data: null,
+		error: null
+	}
+	try {
+		const { url } = req.body;
+		const response = await twitterClient.v2.get(url);
+		console.log(response, 'response')
+		res.send(response.data);
+	}catch(e){
+		console.log(e, 'e')
+		response.error = e;
+		response.status = 400;
+		res.send(response)
+	}
+}

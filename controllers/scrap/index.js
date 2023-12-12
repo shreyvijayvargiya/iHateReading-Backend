@@ -1,6 +1,5 @@
 import { load } from "cheerio";
 import axios from "axios";
-import { XMLParser } from "fast-xml-parser";
 import RssParser from "rss-parser";
 
 export const scrapLink = async (req, res) => {
@@ -76,7 +75,8 @@ export const scrapMetaTags = async (req, res) => {
 				return null
 			}
 		});
-		res.send(items);
+		response.data = items;
+		res.send(response);
 	} catch (e) {
 		response.status = 500;
 		response.error = "";
@@ -97,6 +97,8 @@ export const scrapRSSFeed = async(req, res) => {
 		const parser = new RssParser();
 		const parsed = await parser.parseURL(url);
 		response.data = parsed;
+		response.status = 200;
+		response.success = true;
 		res.send(response)
 	}catch(e){
 		console.log(e, 'error');

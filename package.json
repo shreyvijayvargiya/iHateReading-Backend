@@ -22,6 +22,7 @@
 		"cheerio": "^1.0.0-rc.12",
 		"compression": "^1.7.4",
 		"cors": "^2.8.5",
+		"csv-parser": "^3.0.0",
 		"deep-email-validator": "^0.1.21",
 		"dotenv": "^10.0.0",
 		"ejs": "^3.1.6",
