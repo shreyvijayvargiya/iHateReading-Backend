@@ -30,7 +30,8 @@ import {
 	getYogaPostureImageFromUnSplash,
 	getYogaPostures,
 } from "../controllers/openai/index.js";
-import { getIndianCuisine } from "../controllers/aggregator/index.js";
+import { getIndianCuisine, getNewsWebsite } from "../controllers/aggregator/index.js";
+import { resumeBuildingWebsite } from "../controllers/findjobsportals/index.js";
 const router = express.Router();
 
 router.get("/", (req, res) => {
@@ -62,7 +63,6 @@ router.get(
 router.post("/v1/api/get-link-tags", scrapLink);
 router.post("/v1/api/get-meta-tags", scrapMetaTags);
 router.post("/v1/api/scrap-rss-feed", scrapRSSFeed);
-
 
 // gumroad API routes
 router.get("/v1/api/gumroad/addTemplate", addGumroadTemplate);
@@ -96,5 +96,8 @@ router.post("/v1/api/getSingleThreadTweet", getSingleThreadTweet);
 router.get("/v1/api/getIndianCuisines", getIndianCuisine);
 
 // aggregator APIs
-router.post("/v1/api/getFeeds", () => {});
+router.post("/v1/api/getNewsFeeds", getNewsWebsite);
+
+// find jobs portals APIs
+router.post("/v1/api/resume-build-websites", resumeBuildingWebsite);
 export default router;

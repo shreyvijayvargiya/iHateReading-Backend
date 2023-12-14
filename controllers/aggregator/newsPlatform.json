@@ -1,0 +1,139 @@
+{
+	"newsChannels": [
+		{
+			"name": "NDTV",
+			"website": "https://www.ndtv.com/",
+			"rssLink": "https://www.ndtv.com/rss"
+		},
+		{
+			"name": "The Times of India",
+			"website": "https://timesofindia.indiatimes.com/",
+			"rssLink": "https://timesofindia.indiatimes.com/rssfeedstopstories.cms"
+		},
+		{
+			"name": "Hindustan Times",
+			"website": "https://www.hindustantimes.com/",
+			"rssLink": "https://www.hindustantimes.com/rss/topnews/rssfeed.xml"
+		},
+		{
+			"name": "The Hindu",
+			"website": "https://www.thehindu.com/",
+			"rssLink": "https://www.thehindu.com/news/national/?service=rss"
+		},
+		{
+			"name": "The Indian Express",
+			"website": "https://indianexpress.com/",
+			"rssLink": "https://indianexpress.com/section/india/feed/"
+		},
+		{
+			"name": "News18",
+			"website": "https://www.news18.com/",
+			"rssLink": "https://www.news18.com/rss/"
+		},
+		{
+			"name": "Deccan Herald",
+			"website": "https://www.deccanherald.com/",
+			"rssLink": "https://www.deccanherald.com/rss-feed/"
+		},
+		{
+			"name": "Firstpost",
+			"website": "https://www.firstpost.com/",
+			"rssLink": "https://www.firstpost.com/rss"
+		},
+		{
+			"name": "Business Standard",
+			"website": "https://www.business-standard.com/",
+			"rssLink": "https://www.business-standard.com/rss/home_page_top_stories.xml"
+		},
+		{
+			"name": "Moneycontrol",
+			"website": "https://www.moneycontrol.com/",
+			"rssLink": "https://www.moneycontrol.com/rssfeedpage.php"
+		},
+		{
+			"name": "Livemint",
+			"website": "https://www.livemint.com/",
+			"rssLink": "https://www.livemint.com/rss/news"
+		},
+		{
+			"name": "India Today",
+			"website": "https://www.indiatoday.in/",
+			"rssLink": "https://www.indiatoday.in/rss/home"
+		},
+		{
+			"name": "The Telegraph India",
+			"website": "https://www.telegraphindia.com/",
+			"rssLink": "https://www.telegraphindia.com/rssfeeds/1206611/rss_1.xml"
+		},
+		{
+			"name": "DNA India",
+			"website": "https://www.dnaindia.com/",
+			"rssLink": "https://www.dnaindia.com/rss.xml"
+		},
+		{
+			"name": "Mid-Day",
+			"website": "https://www.mid-day.com/",
+			"rssLink": "https://www.mid-day.com/rssfeed/top-news"
+		},
+		{
+			"name": "Oneindia",
+			"website": "https://www.oneindia.com/",
+			"rssLink": "https://www.oneindia.com/rss/news-india-fb.xml"
+		},
+		{
+			"name": "Scroll.in",
+			"website": "https://scroll.in/",
+			"rssLink": "https://scroll.in/rss"
+		},
+		{
+			"name": "Outlook India",
+			"website": "https://www.outlookindia.com/",
+			"rssLink": "https://www.outlookindia.com/rssfeed/"
+		},
+		{
+			"name": "The Quint",
+			"website": "https://www.thequint.com/",
+			"rssLink": "https://www.thequint.com/rss-feed"
+		},
+		{
+			"name": "DailyO",
+			"website": "https://www.dailyo.in/",
+			"rssLink": "https://www.dailyo.in/rss-feed"
+		},
+		{
+			"name": "New Indian Express",
+			"website": "https://www.newindianexpress.com/",
+			"rssLink": "https://www.newindianexpress.com/nation.rss"
+		},
+		{
+			"name": "The Statesman",
+			"website": "https://www.thestatesman.com/",
+			"rssLink": "https://www.thestatesman.com/feed/rss"
+		},
+		{
+			"name": "The Free Press Journal",
+			"website": "https://www.freepressjournal.in/",
+			"rssLink": "https://www.freepressjournal.in/rss/feed"
+		},
+		{
+			"name": "Greater Kashmir",
+			"website": "https://www.greaterkashmir.com/",
+			"rssLink": "https://www.greaterkashmir.com/feed/"
+		},
+		{
+			"name": "The Hans India",
+			"website": "https://www.thehansindia.com/",
+			"rssLink": "https://www.thehansindia.com/rssfeed/59061"
+		},
+		{
+			"name": "News on Air",
+			"website": "http://www.newsonair.com/",
+			"rssLink": "http://www.newsonair.com/rss/rss.asp"
+		},
+		{
+			"name": "News Nation",
+			"website": "https://www.newsnation.in/",
+			"rssLink": "https://www.newsnation.in/rss"
+		}
+	]
+}
