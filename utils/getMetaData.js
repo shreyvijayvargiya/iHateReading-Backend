@@ -1,7 +1,7 @@
 import axios from "axios";
 import { load } from "cheerio";
 
-export default async function getMetaData(link) {
+export const getMetaData = async(link) => {
 	const data = await axios.get(link);
 	const $ = load(data.data, { xmlMode: true });
 

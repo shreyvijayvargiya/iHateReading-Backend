@@ -30,7 +30,13 @@ import {
 	getYogaPostureImageFromUnSplash,
 	getYogaPostures,
 } from "../controllers/openai/index.js";
-import { getIndianCuisine, getNewsWebsite } from "../controllers/aggregator/index.js";
+import {
+	checkNewsWebsiteAndAddInSupabase,
+	getAllChannels,
+	getIndianCuisine,
+	getNewsWebsite,
+	getSingleChannelFeeds,
+} from "../controllers/aggregator/index.js";
 import { resumeBuildingWebsite } from "../controllers/findjobsportals/index.js";
 const router = express.Router();
 
@@ -97,6 +103,12 @@ router.get("/v1/api/getIndianCuisines", getIndianCuisine);
 
 // aggregator APIs
 router.post("/v1/api/getNewsFeeds", getNewsWebsite);
+router.post("/v1/api/getSingleChannelFeeds", getSingleChannelFeeds);
+router.get("/v1/api/getAllChannels", getAllChannels);
+router.post(
+	"/v1/api/checkNewsWebsiteAndAddInSupabase",
+	checkNewsWebsiteAndAddInSupabase
+);
 
 // find jobs portals APIs
 router.post("/v1/api/resume-build-websites", resumeBuildingWebsite);

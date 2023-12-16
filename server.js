@@ -8,7 +8,6 @@ import path from "path";
 import router from "./routes/index.js";
 import compression from "compression";
 import multer from "multer";
-import './index.js';
 
 const forms = multer();
 dotenv.config();
@@ -53,7 +52,6 @@ server.use((req, res, next) => {
 	});
 	next();
 });
-
 
 server.use("/", router);
 

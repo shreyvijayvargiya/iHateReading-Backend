@@ -4,5 +4,6 @@
 		"target": "es2016",
 		"baseUrl": "server.js"
 	},
-	"exclude": ["node_modules", "**/node_modules/*"]
+	"exclude": ["node_modules", "**/node_modules/*"],
+	"include": ["utils", "controllers", "routes", "views", "utils/supabase.js"]
 }
