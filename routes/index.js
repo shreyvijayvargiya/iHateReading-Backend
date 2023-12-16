@@ -34,6 +34,7 @@ import {
 	checkNewsWebsiteAndAddInSupabase,
 	getAllChannels,
 	getIndianCuisine,
+	getNewsFeeds,
 	getNewsWebsite,
 	getSingleChannelFeeds,
 } from "../controllers/aggregator/index.js";
@@ -102,7 +103,7 @@ router.post("/v1/api/getSingleThreadTweet", getSingleThreadTweet);
 router.get("/v1/api/getIndianCuisines", getIndianCuisine);
 
 // aggregator APIs
-router.post("/v1/api/getNewsFeeds", getNewsWebsite);
+router.post("/v1/api/getNewsFeeds", getNewsFeeds);
 router.post("/v1/api/getSingleChannelFeeds", getSingleChannelFeeds);
 router.get("/v1/api/getAllChannels", getAllChannels);
 router.post(

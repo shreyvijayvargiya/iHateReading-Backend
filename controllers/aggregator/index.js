@@ -101,7 +101,7 @@ function validateAndFetchFromRssLinks(links) {
 	return validRssLinks;
 }
 
-export const getNewsWebsite = async (req, res) => {
+export const getNewsFeeds = async (req, res) => {
 	try {
 		const rssLinks = getChannels();
 		const results = await Promise.all(validateAndFetchFromRssLinks(rssLinks));
