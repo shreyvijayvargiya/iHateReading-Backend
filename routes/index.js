@@ -35,7 +35,6 @@ import {
 	getAllChannels,
 	getIndianCuisine,
 	getNewsFeeds,
-	getNewsWebsite,
 	getSingleChannelFeeds,
 } from "../controllers/aggregator/index.js";
 import { resumeBuildingWebsite } from "../controllers/findjobsportals/index.js";
