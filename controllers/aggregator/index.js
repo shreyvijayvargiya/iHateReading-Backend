@@ -4,7 +4,6 @@ import fs from "fs";
 import RssParser from "rss-parser";
 import { supabaseApp } from "../../utils/supabase.js";
 import { createApi } from "unsplash-js";
-import { createClient } from "pexels";
 import { Configuration, OpenAIApi } from "openai";
 import { encode } from "base64-arraybuffer";
 import admin from "firebase-admin";
@@ -14,7 +13,6 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
-const pexelsClient = createClient(process.env.pexels_key);
 const unsplashRoute = createApi({
 	accessKey: process.env.unsplash_key,
 	fetch: axios,
@@ -33,17 +31,6 @@ export const searchOnUnsplash = async (data) => {
 		console.log(e, "error in unsplash api");
 		throw e;
 	}
-};
-
-export const getImageFromPexels = async (data) => {
-	const queryForImage = data.state + " dish " + data.name;
-	const result = await pexelsClient.photos.search({
-		query: queryForImage,
-		page: 1,
-		per_page: 2,
-		response_format: "b64_json",
-	});
-	return result;
 };
 
 export const getImageFromOpenAI = async (content) => {
