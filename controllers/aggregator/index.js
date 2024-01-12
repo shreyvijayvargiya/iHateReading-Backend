@@ -1,21 +1,118 @@
 import axios from "axios";
 import { load } from "cheerio";
 import fs from "fs";
-import csvParser from "csv-parser";
 import RssParser from "rss-parser";
 import { supabaseApp } from "../../utils/supabase.js";
+import { createApi } from "unsplash-js";
+import { createClient } from "pexels";
+import { Configuration, OpenAIApi } from "openai";
+import { encode } from "base64-arraybuffer";
+import admin from "firebase-admin";
+
+const configuration = new Configuration({
+	apiKey: process.env.OPENAI_TOKEN,
+});
+const openai = new OpenAIApi(configuration);
+
+const pexelsClient = createClient(process.env.pexels_key);
+const unsplashRoute = createApi({
+	accessKey: process.env.unsplash_key,
+	fetch: axios,
+});
+
+export const searchOnUnsplash = async (data) => {
+	try {
+		const queryForImage = data.state + " dish " + data.name;
+		const response = await unsplashRoute?.search?.getPhotos({
+			query: queryForImage,
+		});
+		const results = response?.response?.results;
+		console.log(results.data);
+		return results;
+	} catch (e) {
+		console.log(e, "error in unsplash api");
+		throw e;
+	}
+};
+
+export const getImageFromPexels = async (data) => {
+	const queryForImage = data.state + " dish " + data.name;
+	const result = await pexelsClient.photos.search({
+		query: queryForImage,
+		page: 1,
+		per_page: 2,
+		response_format: "b64_json",
+	});
+	return result;
+};
+
+export const getImageFromOpenAI = async (content) => {
+	try {
+		const prompt = `Give me a clean asthetic image for an Indian dish named as ${content.name}`;
+		const result = await openai.createImage({
+			prompt,
+			size: "512x512",
+			n: 1,
+		});
+		return result.data.data[0].url;
+	} catch (e) {
+		console.log(e, "error in openai api");
+		throw e;
+	}
+};
+
+async function downloadImageAsBase64(imageUrl) {
+	// Use fetch to download the image
+	const response = await fetch(imageUrl);
+	const buffer = await response.arrayBuffer();
+	const baseImage = encode(buffer);
+	return baseImage;
+}
+
+const bucketName = process.env.FIREBASE_BUCKET;
+
+const uploadImageinFirebase = async (req) => {
+	const { image, fileName } = req;
+	const bucket = await admin.storage().bucket(bucketName + "/Indian-Dishes");
+	const file = await (await bucket.file(fileName)).save(image);
+	return file;
+};
 
 export const getIndianCuisine = async (req, res) => {
 	try {
-		const filePath = process.cwd() + "/indian_food.csv";
-
-		let results = [];
-		fs.createReadStream(filePath)
-			.pipe(csvParser())
-			.on("data", (data) => results.push(data))
-			.on("end", () => {
-				res.send(results);
-			});
+		const { start, end } = req.body;
+		const response = await supabaseApp
+			.from("Indian-Food")
+			.select("*")
+			.limit(10);
+		const foods = response.data;
+		const images = await foods.map(async (item) => {
+			const image = await downloadImageAsBase64(item.image);
+			return image;
+		});
+		const result = await Promise.all(images);
+		await result.map(async (singleImage) => {
+			// const imgRes = await uploadImageinFirebase({ image: singleImage, fileName: "file" });
+			await admin.firestore().collection()
+			console.log(imgRes)
+		});
+		res.send(result);
+		return;
+		const emptyImageFood = foods.filter((item) => item.image === null);
+		const results = await emptyImageFood.slice(start, end).map(async (item) => {
+			const resultImage = await getImageFromOpenAI(item);
+			const id = await supabaseApp
+				.from("Indian-Food")
+				.update({ image: resultImage })
+				.eq("name", item.name);
+			results.push({ ...item, image: resultImage });
+			console.log(id.data, results, "done");
+			return {
+				...item,
+				image: resultImage,
+			};
+		});
+		res.send(results);
 	} catch (e) {
 		console.log(e, "e");
 		res.send("Error");
@@ -126,6 +223,7 @@ export const getSingleChannelFeeds = async (req, res) => {
 	}
 };
 
+
 export const getAllChannels = async (req, res) => {
 	try {
 		const rssLinks = getChannels();
@@ -191,7 +289,9 @@ export const checkNewsWebsiteAndAddInSupabase = async (req, res) => {
 		} else {
 			response.data = "News channel already exists";
 		}
-		await supabaseApp.from("News-Channels").insert(response, { count: "exact" });
+		// await supabaseApp
+		// 	.from("News-Channels")
+		// 	.insert(response, { count: "exact" });
 		res.send(response);
 	} catch (e) {
 		console.log(e, "error");

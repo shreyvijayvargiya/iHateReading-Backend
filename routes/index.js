@@ -13,6 +13,7 @@ import {
 	sendFirstEmail,
 	sendSignUpEmail,
 	addSubscriber,
+	sendEmailToUsers,
 } from "../controllers/email/index.js";
 import { postTweet, fetchTweetContent } from "../controllers/tweet/index.js";
 import {
@@ -33,9 +34,11 @@ import {
 import {
 	checkNewsWebsiteAndAddInSupabase,
 	getAllChannels,
+	getImageFromOpenAI,
 	getIndianCuisine,
 	getNewsFeeds,
 	getSingleChannelFeeds,
+	getMetaData,
 } from "../controllers/aggregator/index.js";
 import { resumeBuildingWebsite } from "../controllers/findjobsportals/index.js";
 const router = express.Router();
@@ -76,9 +79,10 @@ router.get("/v1/api/latest-templates", latestTemplates);
 
 // courier api for email
 router.get("/v1/api/signup-email", sendSignUpEmail);
-router.get("/v1/api/addSubscriber", addSubscriber);
+router.post("/v1/api/addSubscriber", addSubscriber);
 router.post("/v1/api/send-testing-email", sendTestingEmail);
 router.post("/v1/api/send-email-list-users", sendEmailToListUsers);
+router.post("/v1/api/send-email-users", sendEmailToUsers)
 router.post("/v1/api/send-first-email", sendFirstEmail);
 
 // twitter api
@@ -100,6 +104,7 @@ router.post("/v1/api/getAllYogaPoses", getAllYogaPoses);
 router.post("/v1/api/getSingleThreadTweet", getSingleThreadTweet);
 
 router.get("/v1/api/getIndianCuisines", getIndianCuisine);
+router.get("/v1/api/getCuisineImage", getImageFromOpenAI);
 
 // aggregator APIs
 router.post("/v1/api/getNewsFeeds", getNewsFeeds);

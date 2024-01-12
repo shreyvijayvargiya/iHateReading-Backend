@@ -39,7 +39,7 @@ export const scrapLink = async (req, res) => {
 				});
 			}
 		});
-		console.log(finalTags)
+		console.log(finalTags);
 		response.data = [{ name: "title", value: title }, ...finalTags];
 		response.status = data.status;
 		response.success = true;
@@ -64,15 +64,15 @@ export const scrapMetaTags = async (req, res) => {
 		const $ = load(data.data, { xmlMode: true });
 
 		const items = [];
-		
+
 		$("meta").each((index, element) => {
-			if(element.name === 'meta'){
+			if (element.name === "meta" && element.attribs.content) {
 				items.push({
 					name: element.attribs.name || element.attribs.property,
 					value: element.attribs.content,
 				});
-			}else {
-				return null
+			} else {
+				return null;
 			}
 		});
 		response.data = items;
@@ -85,24 +85,24 @@ export const scrapMetaTags = async (req, res) => {
 	}
 };
 
-export const scrapRSSFeed = async(req, res) => {
+export const scrapRSSFeed = async (req, res) => {
 	let response = {
 		success: false,
 		status: null,
 		data: null,
 		error: null,
 	};
-	try{
-		const {url} = req.body;
+	try {
+		const { url } = req.body;
 		const parser = new RssParser();
 		const parsed = await parser.parseURL(url);
 		response.data = parsed;
 		response.status = 200;
 		response.success = true;
-		res.send(response)
-	}catch(e){
-		console.log(e, 'error');
+		res.send(response);
+	} catch (e) {
+		console.log(e, "error");
 		response.error = e;
-		res.send(response)
+		res.send(response);
 	}
-}
+};

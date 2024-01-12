@@ -36,14 +36,20 @@ export const sendSignUpEmail = async (req, res) => {
 export const addSubscriber = async (req, res) => {
 	const { username, email } = req.body;
 	try {
-		const newsletters = (
-			await admin.firestore().collection("subscribers").doc("list").get()
-		).data();
-		newsletters["newsletters"].forEach(async (item) => {
+		const isEmailExists = await admin
+			.firestore()
+			.collection("subscribers")
+			.doc("list")
+			.collection("newsletter")
+			.where("email", "==", email)
+			.get()
+			.then((item) => item.size);
+
+		if (isEmailExists === 0) {
 			const obj = {
-				email: item,
+				email,
 				subscribedAt: Date.now(),
-				username: item.split("@")[0],
+				username: email.split("@")[0],
 			};
 			await admin
 				.firestore()
@@ -51,8 +57,10 @@ export const addSubscriber = async (req, res) => {
 				.doc("list")
 				.collection("newsletter")
 				.add(obj);
-		});
-		res.send("Done");
+			res.send("Successfully subscribed");
+		} else {
+			res.send("Email already exists");
+		}
 	} catch (e) {
 		console.log(e, "error");
 		res.send({
@@ -94,14 +102,34 @@ export const sendFirstEmail = async (req, res) => {
 };
 
 export const sendEmailToListUsers = async (req, res) => {
-	const { templateId } = req.body;
+	const { templateId, start, end } = req.body;
 	try {
 		const users = await admin
 			.firestore()
 			.collection("subscribers")
 			.doc("list")
 			.get();
-		const toData = users.data()["newsletters"].map((item) => ({ email: item }));
+		const toData = users
+			.data()
+			["newsletters"].slice(start, end)
+			.map((item) => ({ email: item }));
+		const { requestId } = await courier.send({
+			message: {
+				to: toData,
+				template: templateId,
+			},
+		});
+		res.json({ requestId: requestId, message: "Email sent to the users" });
+	} catch (e) {
+		console.log(e, "error in sending email");
+		res.send("Error, check console");
+	}
+};
+
+export const sendEmailToUsers = async (req, res) => {
+	const { templateId, users } = req.body;
+	try {
+		const toData = users.map((item) => ({ email: item }));
 		const { requestId } = await courier.send({
 			message: {
 				to: toData,
