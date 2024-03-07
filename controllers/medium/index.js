@@ -66,11 +66,22 @@ const getCronExpression = (dateTime) => {
 
 export const scheduleDraft = async (req, res) => {
 	try {
-		const scheduledTime = req.body.time;
+		const { time: scheduledTime, data } = req.body;
+		if (!scheduledTime || !data) {
+			return res
+				.status(400)
+				.send('Invalid request format. Both "time" and "data" are required.');
+		}
 		cron.schedule(scheduledTime, async () => {
-			await admin.firestore().collection("publish").add(req.body.data);
+			console.log(
+				req.body.data.title + " thread is scheduled at " + scheduledTime
+			);
+			const dbRef = await admin
+				.firestore()
+				.collection("publish")
+				.add(req.body.data);
+			console.log(dbRef.id, "id of the article pushed");
 		});
-
 		res.send("Done");
 	} catch (e) {
 		console.log(e, "error in scheduling");
