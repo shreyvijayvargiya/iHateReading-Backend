@@ -34,7 +34,7 @@ export const sendSignUpEmail = async (req, res) => {
 };
 
 export const addSubscriber = async (req, res) => {
-	const { username, email } = req.body;
+	const { email } = req.body;
 	try {
 		const isEmailExists = await admin
 			.firestore()
