@@ -41,7 +41,7 @@ import {
 	getMetaData,
 } from "../controllers/aggregator/index.js";
 import { resumeBuildingWebsite } from "../controllers/findjobsportals/index.js";
-import { getHTMLFileContent, scheduleDraft } from "../controllers/medium/index.js";
+import { publishScheduleDraft } from "../controllers/medium/index.js";
 const router = express.Router();
 
 router.get("/", (req, res) => {
@@ -120,5 +120,5 @@ router.post(
 router.post("/v1/api/resume-build-websites", resumeBuildingWebsite);
 
 // Drafts CRM APIs
-router.get("/v1/api/schedule-task", scheduleDraft);
+router.get("/v1/api/publish-schedule-task", publishScheduleDraft);
 export default router;
