@@ -120,5 +120,5 @@ router.post(
 router.post("/v1/api/resume-build-websites", resumeBuildingWebsite);
 
 // Drafts CRM APIs
-router.get("v1/api/schedule-task", scheduleDraft);
+router.get("/v1/api/schedule-task", scheduleDraft);
 export default router;
