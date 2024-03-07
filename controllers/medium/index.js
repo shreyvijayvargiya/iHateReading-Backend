@@ -1,3 +1,4 @@
+import axios from "axios";
 import { supabaseApp } from "../../utils/supabase.js";
 import admin from "firebase-admin";
 import cron from "node-cron";
@@ -64,6 +65,9 @@ const getCronExpression = (dateTime) => {
 	return `${minutes} ${hours} ${day} ${month} * ${year}`;
 };
 
+const renderAPIURL = "https://api.render.com/v1/services";
+const renderAPIToken = process.env.RENDER_TOKEN;
+
 export const scheduleDraft = async (req, res) => {
 	try {
 		const { time: scheduledTime, data } = req.body;
@@ -81,6 +85,19 @@ export const scheduleDraft = async (req, res) => {
 				.collection("publish")
 				.add(req.body.data);
 			console.log(dbRef.id, "id of the article pushed");
+			const response = await axios.post(
+				renderAPIURL,
+				{
+					startCommand: "echo thread ready to push",
+					schedule: scheduledTime,
+				},
+				{
+					header: {
+						Authorization: `Bearer ${renderAPIToken}`,
+					},
+				}
+			);
+			console.log(response.data);
 		});
 		res.send("Done");
 	} catch (e) {
