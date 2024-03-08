@@ -15,8 +15,8 @@ dotenv.config();
 const server = express();
 server.use(bodyParser.json());
 server.use(bodyParser.urlencoded({ extended: true }));
-server.use(bodyParser.raw())
-server.use(forms.single('image'));
+server.use(bodyParser.raw());
+server.use(forms.single("image"));
 server.use(cors("*"));
 
 server.set("view engine", "hbs");
@@ -45,7 +45,7 @@ const Referer = "https://www.google.com";
 server.use((req, res, next) => {
 	req.headers["User-Agent"] = userAgent;
 	req.headers["Referer"] = Referer;
-	console.log(req.headers, "headers")
+	console.log(req.headers, "headers");
 	compression({
 		threshold: 100 * 1000,
 		level: 6,
@@ -55,6 +55,6 @@ server.use((req, res, next) => {
 
 server.use("/", router);
 
-server.listen(process.env.PORT || 4000, () =>
-	console.log("Server is running on port 4000")
-);
+server.listen(process.env.PORT || 4000, () => {
+	console.log("Server is running on port 4000");
+});

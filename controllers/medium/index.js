@@ -69,8 +69,6 @@ const getCronExpression = (dateTime) => {
 
 export const publishScheduleDraft = async (req, res) => {
 	try {
-		// if we can run this CRON job at every 4:00 PM it will fetch the data from the drafts and push in the threads collection
-
 		const snapshot = await admin
 			.firestore()
 			.collection("scheduledTask")
@@ -82,22 +80,27 @@ export const publishScheduleDraft = async (req, res) => {
 			newThread = snapshot.docs[0].data();
 			id = snapshot.docs[0].id;
 		}
+		const data = await (
+			await admin
+				.firestore()
+				.collection("scheduledTask")
+				.doc(id)
+				.collection("data")
+				.get()
+		).docs[0].data();
+		console.log(newThread.title + " thread is scheduled at ");
 
-		const { scheduled_at: scheduledTime, content } = newThread;
-		if (!scheduledTime || !content) {
-			return res
-				.status(400)
-				.send('Invalid request format. Both "time" and "data" are required.');
-		}
-
-		console.log(newThread.title + " thread is scheduled at " + scheduledTime);
-
-		const { scheduled_at, ...newThreadObj } = newThread;
 		const dbRef = await admin
 			.firestore()
-			.collection("publish")
-			.add({ ...newThreadObj });
-		// remove from scheduledTask collection
+			.collection("threads")
+			.add(newThread);
+
+		await admin
+			.firestore()
+			.collection("threads")
+			.doc(dbRef.id)
+			.collection("data")
+			.add(data);
 		await admin.firestore().collection("scheduledTask").doc(id).delete();
 		res.send(dbRef.id);
 	} catch (e) {

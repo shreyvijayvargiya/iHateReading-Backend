@@ -1,5 +1,6 @@
 import express from "express";
 import passport from "passport";
+import admin from "firebase-admin";
 import { firebaseLogin } from "../controllers/login/firebaseLogin.js";
 import { downloadRepo } from "../controllers/repo/downloadRepo.js";
 import {
@@ -83,7 +84,7 @@ router.get("/v1/api/signup-email", sendSignUpEmail);
 router.post("/v1/api/addSubscriber", addSubscriber);
 router.post("/v1/api/send-testing-email", sendTestingEmail);
 router.post("/v1/api/send-email-list-users", sendEmailToListUsers);
-router.post("/v1/api/send-email-users", sendEmailToUsers)
+router.post("/v1/api/send-email-users", sendEmailToUsers);
 router.post("/v1/api/send-first-email", sendFirstEmail);
 
 // twitter api
@@ -121,4 +122,9 @@ router.post("/v1/api/resume-build-websites", resumeBuildingWebsite);
 
 // Drafts CRM APIs
 router.get("/v1/api/publish-schedule-task", publishScheduleDraft);
+router.get("/v1/api/migrate-data", async (req, res) => {
+	// write data migration code
+
+	res.send("Data migration API endpoint");
+});
 export default router;
