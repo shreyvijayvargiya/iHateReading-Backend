@@ -54,57 +54,51 @@ export const getHTMLFileContent = async (req, res) => {
 	}
 };
 
-const renderAPIURL = "https://api.render.com/v1/services";
-const renderAPIToken = process.env.RENDER_TOKEN;
-
-const getCronExpression = (dateTime) => {
-	const date = new Date(dateTime);
-	const minutes = date.getMinutes();
-	const hours = date.getHours();
-	const day = date.getDay();
-	const month = date.getMonth();
-
-	return `${minutes} ${hours} ${day} ${month} *`;
-};
-
 export const publishScheduleDraft = async (req, res) => {
 	try {
-		const snapshot = await admin
+		const scheduledTaskCollectionRef = admin
 			.firestore()
-			.collection("scheduledTask")
-			.limit(1)
-			.get();
-		let newThread;
-		let id;
+			.collection("scheduledTask");
+
+		const batch = admin.firestore().batch();
+
+		const snapshot = await scheduledTaskCollectionRef.limit(1).get();
+
 		if (snapshot.docs.length > 0) {
-			newThread = snapshot.docs[0].data();
-			id = snapshot.docs[0].id;
+			const scheduledTaskDoc = snapshot.docs[0];
+			const scheduledTaskData = scheduledTaskDoc.data();
+			const scheduledTaskId = scheduledTaskDoc.id;
+
+			const threadsCollectionRef = admin.firestore().collection("threads");
+			const newThreadRef = threadsCollectionRef.doc();
+			batch.set(newThreadRef, scheduledTaskData);
+
+			const dataCollectionRef = scheduledTaskCollectionRef
+				.doc(scheduledTaskId)
+				.collection("data");
+			const dataSnapshot = await dataCollectionRef.limit(1).get();
+
+			if (dataSnapshot.docs.length > 0) {
+				const dataId = dataSnapshot.docs[0].id;
+
+				const newDataRef = newThreadRef.collection("data").doc();
+				batch.set(newDataRef, dataSnapshot.docs[0].data());
+
+				batch.delete(scheduledTaskCollectionRef.doc(scheduledTaskId));
+				batch.delete(dataCollectionRef.doc(dataId));
+
+				// Commit the batched writes
+				await batch.commit();
+
+				res.send(newThreadRef.id);
+			} else {
+				throw new Error("No data found in the scheduledTask data collection");
+			}
+		} else {
+			throw new Error("No scheduledTask document found");
 		}
-		const data = await (
-			await admin
-				.firestore()
-				.collection("scheduledTask")
-				.doc(id)
-				.collection("data")
-				.get()
-		).docs[0].data();
-		console.log(newThread.title + " thread is scheduled at ");
-
-		const dbRef = await admin
-			.firestore()
-			.collection("threads")
-			.add(newThread);
-
-		await admin
-			.firestore()
-			.collection("threads")
-			.doc(dbRef.id)
-			.collection("data")
-			.add(data);
-		await admin.firestore().collection("scheduledTask").doc(id).delete();
-		res.send(dbRef.id);
 	} catch (e) {
-		console.log(e, "error in scheduling");
+		console.error(e, "Error in scheduling");
 		res.status(500).send("Error in service");
 	}
 };
