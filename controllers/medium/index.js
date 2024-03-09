@@ -82,10 +82,11 @@ export const publishScheduleDraft = async (req, res) => {
 				const dataId = dataSnapshot.docs[0].id;
 
 				const newDataRef = newThreadRef.collection("data").doc();
-				batch.set(newDataRef, {
+				const dataObj = {
 					...dataSnapshot.docs[0].data(),
 					timeStamp: Date.now(),
-				});
+				};
+				batch.set(newDataRef, dataObj);
 
 				batch.delete(scheduledTaskCollectionRef.doc(scheduledTaskId));
 				batch.delete(dataCollectionRef.doc(dataId));
