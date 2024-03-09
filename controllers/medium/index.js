@@ -54,6 +54,30 @@ export const getHTMLFileContent = async (req, res) => {
 	}
 };
 
+const dataMigration = async () => {
+	const firstThread = (await admin.firestore().collection("threads").get())
+		.docs[0];
+	const threadData = (
+		await admin
+			.firestore()
+			.collection("threads")
+			.doc(firstThread.id)
+			.collection("data")
+			.get()
+	).docs[0].data();
+	const newDbRef = await admin
+		.firestore()
+		.collection("scheduledTask")
+		.add({ ...firstThread.data() });
+	await admin
+		.firestore()
+		.collection("scheduledTask")
+		.doc(newDbRef.id)
+		.collection("data")
+		.add(threadData);
+	return newDbRef.id;
+};
+
 export const publishScheduleDraft = async (req, res) => {
 	try {
 		const scheduledTaskCollectionRef = admin
@@ -71,8 +95,7 @@ export const publishScheduleDraft = async (req, res) => {
 
 			const threadsCollectionRef = admin.firestore().collection("threads");
 			const newThreadRef = threadsCollectionRef.doc();
-			batch.set(newThreadRef, scheduledTaskData);
-
+			batch.set(newThreadRef, { ...scheduledTaskData, timeStamp: Date.now() });
 			const dataCollectionRef = scheduledTaskCollectionRef
 				.doc(scheduledTaskId)
 				.collection("data");
@@ -82,11 +105,7 @@ export const publishScheduleDraft = async (req, res) => {
 				const dataId = dataSnapshot.docs[0].id;
 
 				const newDataRef = newThreadRef.collection("data").doc();
-				const dataObj = {
-					...dataSnapshot.docs[0].data(),
-					timeStamp: Date.now(),
-				};
-				batch.set(newDataRef, dataObj);
+				batch.set(newDataRef, dataSnapshot.docs[0].data());
 
 				batch.delete(scheduledTaskCollectionRef.doc(scheduledTaskId));
 				batch.delete(dataCollectionRef.doc(dataId));
