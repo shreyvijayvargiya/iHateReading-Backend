@@ -102,24 +102,34 @@ export const sendFirstEmail = async (req, res) => {
 };
 
 export const sendEmailToListUsers = async (req, res) => {
-	const { templateId, start, end } = req.body;
+	const { templateId, start, end, email } = req.body;
 	try {
-		const users = await admin
-			.firestore()
-			.collection("subscribers")
-			.doc("list")
-			.get();
-		const toData = users
-			.data()
-			["newsletters"].slice(start, end)
-			.map((item) => ({ email: item }));
-		const { requestId } = await courier.send({
-			message: {
-				to: toData,
-				template: templateId,
-			},
-		});
-		res.json({ requestId: requestId, message: "Email sent to the users" });
+		if (email) {
+			const { requestId } = await courier.send({
+				message: {
+					to: [{ email }],
+					template: templateId,
+				},
+			});
+			res.send(requestId).status(200);
+		} else {
+			const users = await admin
+				.firestore()
+				.collection("subscribers")
+				.doc("list")
+				.get();
+			const toData = users
+				.data()
+				["newsletters"].slice(start, end)
+				.map((item) => ({ email: item }));
+			const { requestId } = await courier.send({
+				message: {
+					to: toData,
+					template: templateId,
+				},
+			});
+			res.json({ requestId: requestId, message: "Email sent to the users" });
+		}
 	} catch (e) {
 		console.log(e, "error in sending email");
 		res.send("Error, check console");

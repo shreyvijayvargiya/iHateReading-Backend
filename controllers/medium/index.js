@@ -1,7 +1,5 @@
-import axios from "axios";
 import { supabaseApp } from "../../utils/supabase.js";
 import admin from "firebase-admin";
-import cron from "node-cron";
 
 // getting HTML content from the supabase storage
 const fetchHTMLContent = async (filename) => {
@@ -82,41 +80,29 @@ export const publishScheduleDraft = async (req, res) => {
 	try {
 		const scheduledTaskCollectionRef = admin
 			.firestore()
-			.collection("scheduledTask");
+			.collection("scheduledThreads");
 
 		const batch = admin.firestore().batch();
 
-		const snapshot = await scheduledTaskCollectionRef.limit(1).get();
+		const snapshot = await scheduledTaskCollectionRef
+			.limit(1)
+			.orderBy("createdAt", "desc")
+			.get();
 
 		if (snapshot.docs.length > 0) {
 			const scheduledTaskDoc = snapshot.docs[0];
 			const scheduledTaskData = scheduledTaskDoc.data();
 			const scheduledTaskId = scheduledTaskDoc.id;
 
-			const threadsCollectionRef = admin.firestore().collection("threads");
+			const threadsCollectionRef = admin.firestore().collection("publish");
 			const newThreadRef = threadsCollectionRef.doc();
 			batch.set(newThreadRef, { ...scheduledTaskData, timeStamp: Date.now() });
-			const dataCollectionRef = scheduledTaskCollectionRef
-				.doc(scheduledTaskId)
-				.collection("data");
-			const dataSnapshot = await dataCollectionRef.limit(1).get();
+			batch.delete(scheduledTaskCollectionRef.doc(scheduledTaskId));
 
-			if (dataSnapshot.docs.length > 0) {
-				const dataId = dataSnapshot.docs[0].id;
+			// Commit the batched writes
+			await batch.commit();
 
-				const newDataRef = newThreadRef.collection("data").doc();
-				batch.set(newDataRef, dataSnapshot.docs[0].data());
-
-				batch.delete(scheduledTaskCollectionRef.doc(scheduledTaskId));
-				batch.delete(dataCollectionRef.doc(dataId));
-
-				// Commit the batched writes
-				await batch.commit();
-
-				res.send(newThreadRef.id);
-			} else {
-				throw new Error("No data found in the scheduledTask data collection");
-			}
+			res.send(newThreadRef.id);
 		} else {
 			throw new Error("No scheduledTask document found");
 		}
