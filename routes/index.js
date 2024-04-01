@@ -127,23 +127,18 @@ router.get("/v1/api/migrate-data", async (req, res) => {
 
 	// fetch all threads and restructure data and push into publish section
 
-	const thread = await (
-		await admin
-			.firestore()
-			.collection("publish")
-			.orderBy("timeStamp", "desc")
-			.limit(1)
-			.get()
-	).docs[0];
-
-	const threadData = thread.data();
-	const threadId = thread.id;
+	const thread = await await admin
+		.firestore()
+		.collection("scheduledThreads")
+		.orderBy("createdAt", "desc")
+		.limit(1)
+		.get();
 
 	const dbRef = await admin
 		.firestore()
-		.collection("scheduledThreads")
-		.add(threadData);
-	await admin.firestore().collection("publish").doc(threadId).delete();
+		.collection("publish")
+		.add(thread.docs[0].data());
+	console.log(dbRef.id);
 	res.send("Data migration API endpoint");
 });
 export default router;
