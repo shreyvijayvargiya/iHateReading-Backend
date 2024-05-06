@@ -153,6 +153,26 @@ export const sendEmailToUsers = async (req, res) => {
 	}
 };
 
+export const sendEmailToSpecificUser = async (req, res) => {
+	const { userName, userEmail, templateId } = req.body;
+	try {
+		const { requestId } = await courier.send({
+			message: {
+				data: {
+					userName: userName,
+				},
+				to: {
+					email: userEmail,
+				},
+				template: templateId,
+			},
+		});
+		res.json({ requestId: requestId, message: "Email sent to the users" });
+	} catch (e) {
+		console.log(e, "error in sending email");
+		res.send("Error, check console");
+	}
+};
 export const sendTestingEmail = async (req, res) => {
 	const { templateId } = req.body;
 	try {

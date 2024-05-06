@@ -15,6 +15,7 @@ import {
 	sendSignUpEmail,
 	addSubscriber,
 	sendEmailToUsers,
+	sendEmailToSpecificUser,
 } from "../controllers/email/index.js";
 import { postTweet, fetchTweetContent } from "../controllers/tweet/index.js";
 import {
@@ -86,6 +87,7 @@ router.post("/v1/api/send-testing-email", sendTestingEmail);
 router.post("/v1/api/send-email-list-users", sendEmailToListUsers);
 router.post("/v1/api/send-email-users", sendEmailToUsers);
 router.post("/v1/api/send-first-email", sendFirstEmail);
+router.post("/v1/api/send-email-to-user", sendEmailToSpecificUser);
 
 // twitter api
 router.get("/v1/api/postTweet", postTweet);
@@ -141,4 +143,5 @@ router.get("/v1/api/migrate-data", async (req, res) => {
 	console.log(dbRef.id);
 	res.send("Data migration API endpoint");
 });
+
 export default router;
