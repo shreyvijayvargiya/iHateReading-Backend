@@ -1,11 +1,31 @@
 import { courier } from "../../utils/CourierClient.js";
 import admin from "firebase-admin";
-import Sib from "sib-api-v3-sdk";
+import SibApiV3Sdk from "sib-api-v3-sdk";
 
-const client = Sib.ApiClient.instance;
-const apiKey = client.authentications["api-key"];
-apiKey.apiKey = process.env.SEND_IN_BLUE_KEY;
-
+export const sendEmail = async (req, res) => {
+	var defaultClient = SibApiV3Sdk.ApiClient.instance;
+	var apiKey = defaultClient.authentications["api-key"];
+	apiKey.apiKey = process.env.SEND_IN_BLUE_KEY;
+	var apiInstance = new SibApiV3Sdk.EmailCampaignsApi();
+	var emailCampaign = new SibApiV3Sdk.CreateEmailCampaign();
+	try {
+		emailCampaign.name = "Campaign sent via the API";
+		emailCampaign.subject = "My subject";
+		emailCampaign.sender = {
+			name: "Shrey",
+			email: "shreyvijayvargiya26@gmail.com",
+		};
+		emailCampaign.type = "classic";
+		emailCampaign.htmlContent =
+			"Congratulations! You successfully sent this example campaign via the Brevo API.";
+		const response = await apiInstance.createEmailCampaign(emailCampaign);
+		console.log(response);
+		res.send("Done");
+	} catch (e) {
+		console.log(e, "error in sending email");
+		res.send("Error in sending email");
+	}
+};
 export const sendSignUpEmail = async (req, res) => {
 	const { email } = req.body;
 	try {
@@ -132,7 +152,7 @@ export const sendEmailToListUsers = async (req, res) => {
 		}
 	} catch (e) {
 		console.log(e, "error in sending email");
-		res.send("Error, check console");
+		res.send(e);
 	}
 };
 
