@@ -106,3 +106,59 @@ export const scrapRSSFeed = async (req, res) => {
 		res.send(response);
 	}
 };
+
+export const getMetadataFromUrl = async (url) => {
+	try {
+		const { data } = await axios.get(url);
+		const $ = load(data);
+
+		const getMetaContent = (name) => {
+			const content =
+				$(`meta[name="${name}"]`).attr("content") ??
+				$(`meta[property="${name}"]`).attr("content");
+			return content ? content.trim() : undefined;
+		};
+
+		const metadata = {
+			url,
+			title: $("title").text()?.trim() ?? undefined,
+			metaTitle: getMetaContent("og:title"),
+			ogDescription: getMetaContent("og:description"),
+			twitterThumbnail: getMetaContent("twitter:image"),
+			ogThumbnail: getMetaContent("og:image"),
+			description: getMetaContent("description"),
+			twitterLink: getMetaContent("twitter:site"),
+			author: getMetaContent("author"),
+			publicationDate: getMetaContent("article:published_time"),
+			siteName: getMetaContent("og:site_name"),
+			canonicalUrl:
+				$('link[rel="canonical"]').attr("href")?.trim() ?? undefined,
+			locale: getMetaContent("og:locale"),
+			websiteLocation: getMetaContent("og:site"),
+			twitterCard: getMetaContent("twitter:card"),
+			ogType: getMetaContent("og:type"),
+			rssLink:
+				$('link[rel="alternate"][type="application/rss+xml"]')
+					.attr("href")
+					?.trim() ?? undefined,
+			tags:
+				$('meta[name="keywords"]')
+					.attr("content")
+					?.split(",")
+					.map((tag) => tag.trim()) ?? [],
+			additionalImages: [],
+		};
+
+		$("img").each((i, el) => {
+			const src = $(el).attr("src");
+			if (src) {
+				metadata.additionalImages.push(src);
+			}
+		});
+
+		return metadata;
+	} catch (e) {
+		console.log(`Error fetching metadata for URL: ${url}`, e.message);
+		return { url, error: e.message };
+	}
+};

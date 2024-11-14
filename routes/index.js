@@ -40,10 +40,15 @@ import {
 	getIndianCuisine,
 	getNewsFeeds,
 	getSingleChannelFeeds,
-	getMetaData,
+	getJobsPortals,
 } from "../controllers/aggregator/index.js";
 import { resumeBuildingWebsite } from "../controllers/findjobsportals/index.js";
 import { publishScheduleDraft } from "../controllers/medium/index.js";
+import {
+	createNotionTableApi,
+	getNotionDatabaseIds,
+} from "../controllers/notion/index.js";
+import { getCustomReposApi } from "../controllers/customrepos/index.js";
 const router = express.Router();
 
 router.get("/", (req, res) => {
@@ -53,6 +58,7 @@ router.get("/v1/custom-repo/login", firebaseLogin);
 
 // custom repo download api
 router.post("/v1/custom-repo/download-repo", downloadRepo);
+router.get("/v1/getCustomRepos", getCustomReposApi);
 
 // google auth api
 router.get(
@@ -118,6 +124,9 @@ router.post(
 	"/v1/api/checkNewsWebsiteAndAddInSupabase",
 	checkNewsWebsiteAndAddInSupabase
 );
+router.get("/v1/api/getJobPortals", getJobsPortals);
+router.post("/v1/api/firebase-to-notion", createNotionTableApi);
+router.get("/v1/api/getNotionDatabaseIds", getNotionDatabaseIds);
 
 // find jobs portals APIs
 router.post("/v1/api/resume-build-websites", resumeBuildingWebsite);

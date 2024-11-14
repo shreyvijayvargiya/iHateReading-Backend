@@ -7,6 +7,7 @@ import { createApi } from "unsplash-js";
 import { Configuration, OpenAIApi } from "openai";
 import { encode } from "base64-arraybuffer";
 import admin from "firebase-admin";
+import { getMetadataFromUrl } from "../scrap/index.js";
 
 const configuration = new Configuration({
 	apiKey: process.env.OPENAI_TOKEN,
@@ -80,8 +81,8 @@ export const getIndianCuisine = async (req, res) => {
 		const result = await Promise.all(images);
 		await result.map(async (singleImage) => {
 			// const imgRes = await uploadImageinFirebase({ image: singleImage, fileName: "file" });
-			await admin.firestore().collection()
-			console.log(imgRes)
+			await admin.firestore().collection();
+			console.log(imgRes);
 		});
 		res.send(result);
 		return;
@@ -210,7 +211,6 @@ export const getSingleChannelFeeds = async (req, res) => {
 	}
 };
 
-
 export const getAllChannels = async (req, res) => {
 	try {
 		const rssLinks = getChannels();
@@ -283,5 +283,35 @@ export const checkNewsWebsiteAndAddInSupabase = async (req, res) => {
 	} catch (e) {
 		console.log(e, "error");
 		res.send("Error");
+	}
+};
+
+export const getJobsPortals = async (req, res) => {
+	try {
+		const { data: jobsPortals, error } = await supabaseApp
+			.from("Resume-Websites")
+			.select("*");
+
+		if (error) throw new Error(error.message);
+
+		const db = admin.firestore();
+		let metadatas = [];
+
+		for (const portal of jobsPortals) {
+			const url = portal.website;
+			metadatas.push(url);
+			// try {
+			// 	const metadata = await getMetadataFromUrl(url);
+			// 	metadatas.push(metadata);
+			// } catch (e) {
+			// 	console.log(`Error fetching metadata for URL: ${url}`, e.message);
+			// 	metadatas.push({ url, error: e.message });
+			// }
+		}
+
+		res.json(metadatas);
+	} catch (e) {
+		console.log(e, "error");
+		res.status(500).send("Error");
 	}
 };
