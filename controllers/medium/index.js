@@ -75,7 +75,6 @@ export const publishScheduleDraft = async (req, res) => {
 			batch.set(newThreadRef, { ...scheduledTaskData, timeStamp: Date.now() });
 			batch.delete(scheduledTaskCollectionRef.doc(scheduledTaskId));
 
-			// Commit the batched writes
 			await batch.commit();
 
 			res.send(newThreadRef.id);

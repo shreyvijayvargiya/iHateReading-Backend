@@ -48,7 +48,7 @@ import {
 	createNotionTableApi,
 	getNotionDatabaseIds,
 } from "../controllers/notion/index.js";
-import { getCustomReposApi } from "../controllers/customrepos/index.js";
+import { getCustomReposApi, updateCustomRepoByIdApi, updateCustomReposApi } from "../controllers/customrepos/index.js";
 const router = express.Router();
 
 router.get("/", (req, res) => {
@@ -57,9 +57,10 @@ router.get("/", (req, res) => {
 router.get("/v1/custom-repo/login", firebaseLogin);
 
 // custom repo download api
-router.post("/v1/custom-repo/download-repo", downloadRepo);
-router.get("/v1/getCustomRepos", getCustomReposApi);
-
+router.post("/api/v1/custom-repo/download-repo", downloadRepo);
+router.get("/api/v1/getCustomRepos", getCustomReposApi);
+router.get("/api/v1/update-custom-repo", updateCustomReposApi);
+router.get("/api/v1/custom-repo/update", updateCustomRepoByIdApi);
 // google auth api
 router.get(
 	"/v1/auth/google",
