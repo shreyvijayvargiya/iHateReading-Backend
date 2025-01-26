@@ -22,53 +22,71 @@ export const getCustomReposApi = async (req, res) => {
 
 export const updateCustomReposApi = async (req, res) => {
 	try {
-		const collectionRef = admin.firestore().collection("CustomRepos");
-		const snapshot = await collectionRef.get();
+		const { data: repos, error: fetchError } = await supabaseApp
+			.from("CustomRepos")
+			.select("id, demoLink");
 
-		const batch = admin.firestore().batch();
+		if (fetchError) {
+			return res.status(500).send("Failed to fetch documents");
+		}
 
-		snapshot.docs.forEach((doc) => {
-			const data = doc.data();
-			const updatedDemoLink = data.demoLink.replace(
-				"iamshrey.me",
-				"ihatereading.in"
+		const updates = repos.map(async (repo) => {
+			const updatedDemoLink = repo.demoLink.replace(
+				"projects",
+				"custom-components"
 			);
-			batch.update(doc.ref, { demoLink: updatedDemoLink });
+
+			const { error: updateError } = await supabaseApp
+				.from("CustomRepos")
+				.update({ demoLink: updatedDemoLink })
+				.eq("id", repo.id);
+
+			if (updateError) {
+				throw new Error(`Failed to update document with ID: ${repo.id}`);
+			}
 		});
 
-		await batch.commit();
+		await Promise.all(updates);
 
-		console.log("Updated all demoLink fields successfully.");
 		res.status(200).send("All demoLink fields updated successfully.");
 	} catch (error) {
-		console.error("Error updating demoLink fields:", error);
 		res.status(500).send(error.message);
 	}
 };
 
+
 export const updateCustomRepoByIdApi = async (req, res) => {
 	try {
 		const { id } = req.body;
-		const docRef = admin.firestore().collection("CustomRepos").doc(id);
 
-		const docSnapshot = await docRef.get();
+		const { data, error } = await supabaseApp
+			.from("CustomRepos")
+			.select("demoLink")
+			.eq("id", id)
+			.single();
 
-		if (!docSnapshot.exists) {
+		console.log(error);
+		if (error) {
 			return res.status(404).send("Document not found");
 		}
 
-		const data = docSnapshot.data();
-		const updatedDemoLink = data.demoLink.replace(
+		const updatedDemoLink = data.demoLink.replaceAll(
 			"iamshrey.me",
 			"ihatereading.in"
 		);
+		console.log(updatedDemoLink, "updatedDemoLink");
 
-		await docRef.update({ demoLink: updatedDemoLink });
+		const { error: updateError } = await supabaseApp
+			.from("CustomRepos")
+			.update({ demoLink: updatedDemoLink })
+			.eq("id", id);
 
-		console.log(`Updated demoLink for document with ID: ${id}`);
+		if (updateError) {
+			return res.status(500).send("Failed to update document");
+		}
+
 		res.status(200).send(`Updated demoLink for document with ID: ${id}`);
 	} catch (error) {
-		console.error("Error updating demoLink for document:", error);
 		res.status(500).send(error.message);
 	}
 };

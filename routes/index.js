@@ -7,6 +7,7 @@ import {
 	scrapMetaTags,
 	scrapLink,
 	scrapRSSFeed,
+	searchGoogle,
 } from "../controllers/scrap/index.js";
 import {
 	sendTestingEmail,
@@ -23,10 +24,14 @@ import {
 	latestTemplates,
 } from "../controllers/templates/index.js";
 import {
+	aiGenKit,
+	answerGenAiApi,
+	createRepo,
 	getAllYogaAsanas,
 	getAllYogaPoses,
 	getDataFromOpenAI,
 	getSingleThreadTweet,
+	getUniqueLinksFromNewsletters,
 	getYogaAsanasByGenderMood,
 	getYogaAsanasByTime,
 	getYogaAsanasForHealthProblems,
@@ -48,7 +53,11 @@ import {
 	createNotionTableApi,
 	getNotionDatabaseIds,
 } from "../controllers/notion/index.js";
-import { getCustomReposApi, updateCustomRepoByIdApi, updateCustomReposApi } from "../controllers/customrepos/index.js";
+import {
+	getCustomReposApi,
+	updateCustomRepoByIdApi,
+	updateCustomReposApi,
+} from "../controllers/customrepos/index.js";
 const router = express.Router();
 
 router.get("/", (req, res) => {
@@ -61,6 +70,7 @@ router.post("/api/v1/custom-repo/download-repo", downloadRepo);
 router.get("/api/v1/getCustomRepos", getCustomReposApi);
 router.get("/api/v1/update-custom-repo", updateCustomReposApi);
 router.get("/api/v1/custom-repo/update", updateCustomRepoByIdApi);
+
 // google auth api
 router.get(
 	"/v1/auth/google",
@@ -116,6 +126,13 @@ router.post("/v1/api/getSingleThreadTweet", getSingleThreadTweet);
 
 router.get("/v1/api/getIndianCuisines", getIndianCuisine);
 router.get("/v1/api/getCuisineImage", getImageFromOpenAI);
+
+router.get("/v1/api/scrap-google-search", searchGoogle);
+router.get("/v1/api/answerGenkitAi", answerGenAiApi);
+router.get(
+	"/v1/api/getUniqueLinksFromNewsletters",
+	getUniqueLinksFromNewsletters
+);
 
 // aggregator APIs
 router.post("/v1/api/getNewsFeeds", getNewsFeeds);

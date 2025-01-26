@@ -1,6 +1,7 @@
 import { load } from "cheerio";
 import axios from "axios";
 import RssParser from "rss-parser";
+import { chromium } from "playwright";
 
 export const scrapLink = async (req, res) => {
 	const { url } = req.body;
@@ -161,4 +162,9 @@ export const getMetadataFromUrl = async (url) => {
 		console.log(`Error fetching metadata for URL: ${url}`, e.message);
 		return { url, error: e.message };
 	}
+};
+
+export const searchGoogle = async (req, res) => {
+	
+	return links;
 };
