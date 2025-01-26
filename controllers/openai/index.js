@@ -148,7 +148,6 @@ export const getAllYogaAsanas = async (req, res) => {
 	Give me all types of yoga asanas. The output should be the list of the
 	the names of all asana in sanskrit english`;
 	const response = await openaiCompletionResponse({ prompt });
-	console.log(response.data.choices[0].text.length);
 	res.send(response.data.choices[0].text);
 };
 
@@ -159,7 +158,6 @@ export const getYogaAsanasByTime = async (req, res) => {
 	current time is ${Date.now()}. The output should be the list of the names of all asana 
 	in sanskrit I can do at the current time`;
 	const response = await openaiCompletionResponse({ prompt });
-	console.log(typeof response.data.choices[0].text);
 	res.send(response.data.choices[0].text);
 };
 
@@ -315,33 +313,6 @@ export const createRepo = async (req, res) => {
 	}
 };
 
-function extractUniqueLinks(htmlStrings) {
-	const uniqueLinks = new Set();
-
-	htmlStrings.forEach((htmlString) => {
-		try {
-			const parser = new DOMParser();
-			const doc = parser.parseFromString(htmlString, "text/html");
-
-			const links = Array.from(doc.querySelectorAll("a[href]")).map(
-				(a) => a.href
-			);
-
-			links.forEach((link) => {
-				try {
-					const url = new URL(link);
-					uniqueLinks.add(url.toString());
-				} catch (error) {
-					console.error(`Invalid URL encountered: ${link}`, error); //Log invalid URLs for debugging
-				}
-			});
-		} catch (error) {
-			console.error("Error parsing HTML string:", error); //Log parsing errors
-		}
-	});
-
-	return Array.from(uniqueLinks);
-}
 const extractLinks = (html) => {
 	const $ = load(html);
 
@@ -357,6 +328,16 @@ const extractLinks = (html) => {
 	return links;
 };
 
+const unwantedDomains = new Set([
+	"ihatereading.in",
+	"www.ihatereading.in",
+	"shreyvijayvargiya.gumroad.com",
+	"4pn312wb.r.us-east-1.awstrack.me",
+	"url6652.creators.gumroad.com",
+	"ehhhejh.r.af.d.sendibt2.com",
+	"tracking.tldrnewsletter.com",
+]);
+
 export const getUniqueLinksFromNewsletters = async (req, res) => {
 	try {
 		const newsletters = await admin
@@ -369,12 +350,19 @@ export const getUniqueLinksFromNewsletters = async (req, res) => {
 		emails.forEach((block) => {
 			let html = convertDataToHtml(block.data.blocks);
 			extractLinks(html).forEach((link) => {
-				if (link) {
-					links.add(link);
+				try{
+					const url = new URL(link);
+					if (link && url) {
+						const domain = url.hostname;
+						if (!unwantedDomains.has(domain)) {
+							links.add(link);
+						}
+					}
+				}catch(e){
+					console.log(e, "error in link")
 				}
 			});
 		});
-		console.log(links);
 		res.send([...links]);
 	} catch (e) {
 		console.log(e, "error");
