@@ -54,10 +54,11 @@ import {
 	getNotionDatabaseIds,
 } from "../controllers/notion/index.js";
 import {
-	getCustomReposApi,
-	updateCustomRepoByIdApi,
-	updateCustomReposApi,
-} from "../controllers/customrepos/index.js";
+	createBasicStarterRepo,
+	createRepoApi,
+} from "../controllers/langchain/index.js";
+import { createCustomRepoApi, generateCustomRepo } from "../controllers/customrepos/index.js";
+
 const router = express.Router();
 
 router.get("/", (req, res) => {
@@ -66,10 +67,10 @@ router.get("/", (req, res) => {
 router.get("/v1/custom-repo/login", firebaseLogin);
 
 // custom repo download api
-router.post("/api/v1/custom-repo/download-repo", downloadRepo);
-router.get("/api/v1/getCustomRepos", getCustomReposApi);
-router.get("/api/v1/update-custom-repo", updateCustomReposApi);
-router.get("/api/v1/custom-repo/update", updateCustomRepoByIdApi);
+router.post("/v1/api/custom-repo/download-repo", downloadRepo);
+router.get("/v1/api/getCustomRepos", () => {});
+router.post("/v1/api/generate-custom-repo", generateCustomRepo);
+router.get("/v1/api/create-custom-repo", createCustomRepoApi);
 
 // google auth api
 router.get(
@@ -133,6 +134,8 @@ router.get(
 	"/v1/api/getUniqueLinksFromNewsletters",
 	getUniqueLinksFromNewsletters
 );
+router.post("/v1/api/createRepo", createRepo);
+router.post("/v1/api/createBasicStarterRepo", createBasicStarterRepo);
 
 // aggregator APIs
 router.post("/v1/api/getNewsFeeds", getNewsFeeds);

@@ -1,11 +1,8 @@
 import { Configuration, OpenAIApi } from "openai";
 import admin from "firebase-admin";
-import Anthropic from "@anthropic-ai/sdk";
 import { gemini15Flash, googleAI } from "@genkit-ai/googleai";
 import { genkit } from "genkit";
 import { createApi } from "unsplash-js";
-import extracturls from "extract-urls";
-import htmlUrls from "html-urls";
 import { load } from "cheerio";
 
 export const convertDataToHtml = (blocks) => {
@@ -65,7 +62,6 @@ export const convertDataToHtml = (blocks) => {
 			}
 		});
 	}
-
 	return convertedHtml;
 };
 
@@ -275,44 +271,6 @@ export const answerGenAiApi = async (req, res) => {
 	}
 };
 
-export const createRepo = async (req, res) => {
-	try {
-		const { name, instructions } = req.body;
-
-		const dynamicPrompt = `
-      Create a complete, ready-to-use ${name} project repository with the following technologies and libraries:
-      ${instructions}.
-      
-      The repository should include:
-      1. A valid 'package.json' file with all the necessary dependencies and devDependencies installed with their latest versions.
-      2. Configuration files (e.g., tailwind.config.js, .eslintrc, etc.) for all required tools and libraries.
-      3. A basic project structure including folders like 'src', 'components', 'pages', and others as needed.
-      4. For state management libraries like Redux, Zustand, or Context API, provide the basic setup with sample files (e.g., store.js, slices, or reducers).
-      5. For UI libraries like styled-components or TailwindCSS, include the necessary setup and an example usage in a sample component.
-      6. For integrations like Supabase or Firebase, include an "api.js" or "supabaseClient.js" file with a sample query or function.
-      7. All files should be structured in JSON format with:
-         - "name" (file or folder name),
-         - "type" ("file" or "directory"),
-         - "content" (for files) or "children" (for directories).
-      The project should be ready to start with minimal effort after installation.
-    `;
-
-		const { text } = await ai.generate({
-			prompt: dynamicPrompt,
-			system:
-				"You are a senior software developer. Always output complete JSON-based code repositories that is easy to parse with all dependencies, configuration files, and starter code necessary to run the project.",
-		});
-
-		res.json(text);
-	} catch (e) {
-		console.error("Error generating repository:", e);
-		res.status(500).json({
-			success: false,
-			message: "Error generating repository",
-		});
-	}
-};
-
 const extractLinks = (html) => {
 	const $ = load(html);
 
@@ -350,7 +308,7 @@ export const getUniqueLinksFromNewsletters = async (req, res) => {
 		emails.forEach((block) => {
 			let html = convertDataToHtml(block.data.blocks);
 			extractLinks(html).forEach((link) => {
-				try{
+				try {
 					const url = new URL(link);
 					if (link && url) {
 						const domain = url.hostname;
@@ -358,14 +316,189 @@ export const getUniqueLinksFromNewsletters = async (req, res) => {
 							links.add(link);
 						}
 					}
-				}catch(e){
-					console.log(e, "error in link")
+				} catch (e) {
+					console.log(e, "error in link");
 				}
 			});
 		});
+		await admin
+			.firestore()
+			.collection("collections")
+			.doc("universo")
+			.set({ createdAt: Date.now(), links: [...links] }, { merge: true });
 		res.send([...links]);
 	} catch (e) {
 		console.log(e, "error");
 		res.send("Error");
+	}
+};
+
+export const createSchema = async (req, res) => {
+	try {
+		const { instructions } = req.body;
+		const { text } = await ai.generate({
+			prompt: instructions,
+			system: `
+				You are a senior software developer. Always return a valid schema object using zod the final schema object for the prompt defined by the user
+
+				For example, 
+				const { z } = require("zod");
+
+				const FileSchema = z.object({
+					name: z.string(),
+					type: z.literal("file"),  // 'type' must exactly be "file"
+					content: z.string(), // File content as a string
+				});
+
+				const FolderSchema = z.object({
+					name: z.string(),
+					type: z.literal("directory"),  // 'type' must exactly be "directory"
+					children: z.array(z.union([FileSchema, z.lazy(() => FolderSchema)])), // Can contain files or nested folders
+				});
+
+				const DirSchema = z.object({
+					name: z.string(),
+					type: z.literal("directory"),  // 'type' must exactly be "directory"
+					children: z.array(z.union([FileSchema, FolderSchema])), // Array of files or subfolders
+				});
+
+				Your response should follow the structure defined by the DirSchema:
+				
+				- Each directory should have the properties:
+					- "name": string (name of the directory)
+					- "type": "directory" (the 'type' must be exactly "directory")
+					- "children": array of files or directories (max depth of 2 levels)
+					
+				- Each file should have the properties:
+					- "name": string (name of the file)
+					- "type": "file" (the 'type' must be exactly "file")
+					- "content": string (content of the file)
+
+				Example structure:
+				{
+					"name": "project-root",
+					"type": "directory",  // 'type' must be "directory" exactly
+					"children": [
+						{
+							"name": "package.json",
+							"type": "file",  // 'type' must be "file" exactly
+							"content": "{...}"
+						},
+						{
+							"name": "src",
+							"type": "directory",  // 'type' must be "directory" exactly
+							"children": [
+								{
+									"name": "index.js",
+									"type": "file",  // 'type' must be "file" exactly
+									"content": "// Entry point for the app"
+								}
+							]
+						}
+					]
+				}
+
+				Please ensure the output is structured in JSON format, matching the described schema, and avoid any additional comments, markdown, or code blocks. 
+				The 'type' field must always be the exact strings "file" or "directory", with lowercase letters.
+			`,
+			config: {
+				maxOutputTokens: 4000,
+			},
+		});
+		const cleanedText = text.replace(/```json|```/g, "").trim();
+		const outputJSON = JSON.parse(cleanedText);
+		const validatedOutput = DirSchema.parse(outputJSON);
+
+		res.send({ response: validatedOutput });
+	} catch (e) {
+		console.error("Error generating repository:", e);
+		res.status(500).json({
+			success: false,
+			message: "Error generating repository",
+		});
+	}
+};
+export const createRepo = async (req, res) => {
+	try {
+		const { instructions } = req.body;
+		const { text } = await ai.generate({
+			prompt: instructions,
+			system: `
+				You are a senior software developer. Always return a valid JSON object of a project repository, structured according to the following Zod schema:
+
+				const { z } = require("zod");
+
+				const FileSchema = z.object({
+					name: z.string(),
+					type: z.literal("file"),  // 'type' must exactly be "file"
+					content: z.string(), // File content as a string
+				});
+
+				const FolderSchema = z.object({
+					name: z.string(),
+					type: z.literal("directory"),  // 'type' must exactly be "directory"
+					children: z.array(z.union([FileSchema, z.lazy(() => FolderSchema)])), // Can contain files or nested folders
+				});
+
+				const DirSchema = z.object({
+					name: z.string(),
+					type: z.literal("directory"),  // 'type' must exactly be "directory"
+					children: z.array(z.union([FileSchema, FolderSchema])), // Array of files or subfolders
+				});
+
+				Your response should follow the structure defined by the ${DirSchema}:
+				
+				- Each directory should have the properties:
+					- "name": string (name of the directory)
+					- "type": "directory" (the 'type' must be exactly "directory")
+					- "children": array of files or directories (max depth of 2 levels)
+					
+				- Each file should have the properties:
+					- "name": string (name of the file)
+					- "type": "file" (the 'type' must be exactly "file")
+					- "content": string (content of the file)
+
+				Example structure:
+				{
+					"name": "project-root",
+					"type": "directory",  // 'type' must be "directory" exactly
+					"children": [
+						{
+							"name": "package.json",
+							"type": "file",  // 'type' must be "file" exactly
+							"content": "{...}"
+						},
+						{
+							"name": "src",
+							"type": "directory",  // 'type' must be "directory" exactly
+							"children": [
+								{
+									"name": "index.js",
+									"type": "file",  // 'type' must be "file" exactly
+									"content": "// Entry point for the app"
+								}
+							]
+						}
+					]
+				}
+
+				Please ensure the output is structured in JSON format, matching the described schema, and avoid any additional comments, markdown, or code blocks. 
+				The 'type' field must always be the exact strings "file" or "directory", with lowercase letters.
+			`,
+			config: {
+				maxOutputTokens: 4000,
+			},
+		});
+		const cleanedText = text.replace(/```json|```/g, "").trim();
+		const outputJSON = JSON.parse(cleanedText);
+		const validatedOutput = DirSchema.parse(outputJSON);
+
+		res.send({ response: validatedOutput });
+	} catch (e) {
+		console.error("Error generating repository:", e);
+		res.status(500).json({
+			success: false,
+			message: "Error generating repository",
+		});
 	}
 };

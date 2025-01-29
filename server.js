@@ -8,6 +8,7 @@ import path from "path";
 import router from "./routes/index.js";
 import compression from "compression";
 import multer from "multer";
+import geoip from "geoip-lite";
 
 const forms = multer();
 dotenv.config();
@@ -18,6 +19,12 @@ server.use(bodyParser.urlencoded({ extended: true }));
 server.use(bodyParser.raw());
 server.use(forms.single("image"));
 server.use(cors("*"));
+server.use((req, res, next) => {
+	const clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+	console.log("Client IP:", clientIp);
+	req.clientIp = clientIp;
+	next();
+});
 
 server.set("view engine", "hbs");
 server.set("views", path.join(path.dirname + "/views"));
@@ -45,7 +52,11 @@ const Referer = "https://www.google.com";
 server.use((req, res, next) => {
 	req.headers["User-Agent"] = userAgent;
 	req.headers["Referer"] = Referer;
-	console.log(req.headers, "headers");
+	const clientIp =
+		req.headers["x-forwarded-for"] || req.socket.remoteAddress || "127.0.0.1";
+
+	const location = geoip.lookup({ clientIp });
+	console.log({ ...req.headers, location }, "headers");
 	compression({
 		threshold: 100 * 1000,
 		level: 6,
@@ -55,6 +66,6 @@ server.use((req, res, next) => {
 
 server.use("/", router);
 
-server.listen(process.env.PORT || 4000, () => {
-	console.log("Server is running on port 4000");
+server.listen(process.env.PORT, "127.0.0.1" || 4000, () => {
+	console.log("Server is running on port " + process.env.PORT);
 });
