@@ -26,7 +26,6 @@ export const searchOnUnsplash = async (data) => {
 			query: queryForImage,
 		});
 		const results = response?.response?.results;
-		console.log(results.data);
 		return results;
 	} catch (e) {
 		console.log(e, "error in unsplash api");

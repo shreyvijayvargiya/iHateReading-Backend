@@ -40,7 +40,6 @@ export const scrapLink = async (req, res) => {
 				});
 			}
 		});
-		console.log(finalTags);
 		response.data = [{ name: "title", value: title }, ...finalTags];
 		response.status = data.status;
 		response.success = true;
