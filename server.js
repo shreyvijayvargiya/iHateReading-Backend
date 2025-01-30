@@ -55,6 +55,7 @@ server.use((req, res, next) => {
 		req.headers["x-forwarded-for"] || req.socket.remoteAddress || "127.0.0.1";
 
 	const location = geoip.lookup({ clientIp });
+	console.log({ ...req.headers, location }, "headers");
 	compression({
 		threshold: 100 * 1000,
 		level: 6,

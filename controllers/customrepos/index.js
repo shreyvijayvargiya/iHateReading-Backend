@@ -36,13 +36,10 @@ export const generateCustomRepo = async (req, res) => {
 			new SystemMessage(systemPrompt),
 			new HumanMessage("Generate the defined repository structure"),
 		]);
-
-		sendEvent("Repository structure generated...");
-		sendEvent("Validating the repository");
 		try {
 			const validated = DirSchema.parse(JSON.parse(response.content));
-			sendEvent("Repository validation successful.");
-			res.write(`data: ${JSON.stringify({ validated })}\n\n`);
+			sendEvent("Repository generated successfully.");
+			res.write(`data: ${JSON.stringify({ data: validated })}\n\n`);
 		} catch (validationError) {
 			sendEvent("Error during validation.");
 			throw validationError;

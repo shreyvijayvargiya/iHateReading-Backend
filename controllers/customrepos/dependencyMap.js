@@ -1,8 +1,25 @@
 export const dependencyMap = {
 	frameworks: {
 		"next.js": {
-			instructions:
-				"Create pages/ directory with SSR setup and next config file along with sample code",
+			instructions: `
+        Generate a comprehensive Next.js 14 boilerplate with the following:
+        1. Core dependencies: next, react, react-dom
+        2. Basic project structure:
+           - pages/ directory with SSR setup
+           - public/ for static assets
+           - src/ for components and utilities
+        3. Essential configurations:
+           - next.config.js with basic settings
+           - .env template for environment variables
+           - .eslintrc.json for linting
+        4. Example files:
+           - pages/index.js with a basic home page
+           - pages/api/hello.js for API route example
+           - src/components/Layout.jsx for shared layout
+					 - pages/_app.js for wrapper 
+        5. Documentation:
+           - README.md with setup instructions
+      `,
 			sampleCode: {
 				files: [
 					{
@@ -23,7 +40,20 @@ export const dependencyMap = {
 			},
 		},
 		"create-react-app": {
-			instructions: "Generate src/ structure with React 18+",
+			instructions: `Generate a comprehensive Create React App boilerplate with the following:
+        1. Core dependencies: react, react-dom, react-scripts
+        2. Basic project structure:
+          - src/ directory with components, App.js, and index.js
+          - public/ for static assets
+        3. Essential configurations:
+          - .env for environment variables
+          - .eslintrc.json for linting (if ESLint is enabled)
+        4. Example files:
+          - src/App.js with a basic component
+          - src/index.js with ReactDOM rendering
+        5. Documentation:
+          - README.md with setup instructions
+				`,
 			sampleCode: {
 				files: [
 					{
@@ -67,15 +97,21 @@ export const dependencyMap = {
 					},
 					{
 						path: "vite.config.js",
-						content: ""
-					}
+						content: "",
+					},
 				],
 			},
 		},
 	},
 	ui: {
 		antd: {
-			instructions: "Configure Ant Design in src/antd",
+			instructions: `
+				Integrate Ant Design with auto-dependency resolution:
+				1. Retrieve the latest version of Ant Design.
+				2. Install Ant Design.
+				3. Ensure that "react" and "react-dom" are installed, as they are peer dependencies.
+				4. Wrap the root component with corresponding config Provider.
+			`,
 			sampleCode: {
 				files: [
 					{
@@ -92,7 +128,19 @@ export const dependencyMap = {
 			},
 		},
 		"shadcn/ui": {
-			instructions: "Add components/ with shadcn primitives",
+			instructions: `
+			  Integrate shadcn/ui with auto-dependency resolution:
+        1. Find latest version of shadcn-ui CLI using:
+           \`npm view shadcn-ui@latest version\`
+        2. Initialize shadcn components with:
+           \`npx shadcn-ui@latest init\` 
+        3. Detect required peer dependencies from:
+           https://ui.shadcn.com/docs/installation
+        4. Install Radix UI primitives automatically:
+           \`npm install @radix-ui/react-[component]\`
+        5. Add tailwind.config.js modifications if missing
+        6. Wrap root layout with <ThemeProvider>
+			`,
 			sampleCode: {
 				files: [
 					{
@@ -107,7 +155,13 @@ export const dependencyMap = {
 			},
 		},
 		mui: {
-			instructions: "Create theme/ directory with Material UI config",
+			instructions: `
+				Integrate Material-UI with auto-dependency resolution:
+				1. Retrieve the latest version of Material-UI core.
+				2. Install Material-UI core and its peer dependencies.
+				3. (Optional) If icons are needed, install Material-UI icons.
+				4. Wrap the root component with ThemeProvider.
+			`,
 			sampleCode: {
 				files: [
 					{
@@ -121,8 +175,13 @@ export const dependencyMap = {
 				],
 			},
 		},
-		antd: {
-			instructions: "Configure Ant Design in src/antd",
+		chakra: {
+			instructions: `
+				Integrate Chakra UI with auto-dependency resolution:
+				1. Retrieve the latest version of Chakra UI.
+				2. Install Chakra UI and its peer dependencies.
+				3. Wrap the root component with ChakraProvider
+			`,
 			sampleCode: {
 				files: [
 					{
@@ -209,7 +268,18 @@ export const dependencyMap = {
 	},
 	statemanagement: {
 		zustand: {
-			instructions: "Create store/ with Zustand slices",
+			instructions: `
+				Integrate Zustand with auto-dependency resolution:
+				1. Retrieve the latest version of Zustand:
+					"npm view zustand@latest version"
+				2. Install Zustand:
+					"npm install zustand"
+				3. Create a Zustand store to manage application state.
+				4. Use the Zustand store within components to access and update state.
+				5. For Next.js applications:
+					- Ensure compatibility with server-side rendering by creating the store per request to prevent shared state between requests.
+					- Avoid using the store in React Server Components; instead, use it in Client Components where hooks are supported.
+			`,
 			sampleCode: {
 				files: [
 					{
@@ -227,7 +297,19 @@ export const dependencyMap = {
 			},
 		},
 		redux: {
-			instructions: "Generate redux store with toolkit",
+			instructions: `
+				Integrate Redux with auto-dependency resolution:
+				1. Retrieve the latest version of Redux Toolkit:
+					"npm view @reduxjs/toolkit@latest version"
+				2. Install Redux Toolkit and React-Redux:
+					"npm install @reduxjs/toolkit react-redux"
+				3. Create a Redux store and configure it with reducers.
+				4. Wrap the root component with <Provider> to make the store accessible:
+					- For React.js: Wrap the <App /> component.
+					- For Next.js: Wrap the custom <App /> component in "pages/_app.js" or "pages/_app.tsx".
+				5. Use Redux hooks (useSelector, useDispatch) in components to interact with the store.
+				6. For Next.js with server-side rendering, ensure proper store hydration to maintain state consistency between server and client.
+			`,
 			sampleCode: {
 				files: [
 					{
@@ -262,7 +344,17 @@ export const dependencyMap = {
 	},
 	payment: {
 		stripe: {
-			instructions: "Create api/stripe with webhook handlers",
+			instructions: `
+				Integrate Stripe payments with auto-dependency resolution:
+				Retrieve the latest version of Stripe's React library.
+				Install the required Stripe packages.
+				Set up a Stripe account and obtain your API keys from the Stripe Dashboard.
+				Configure the Stripe provider in your application to initialize Stripe.
+				Create a payment form using Stripe Elements to securely collect payment details.
+				Implement server-side logic to create payment intents and handle payment confirmations.
+				Set up a webhook endpoint to listen for Stripe events (e.g., payment success, failure) and handle them appropriately.
+				Ensure that your application securely handles sensitive payment information and complies with PCI DSS standards.
+			`,
 			env: ["STRIPE_API_KEY"],
 			sampleCode: {
 				files: [
@@ -278,7 +370,17 @@ export const dependencyMap = {
 			},
 		},
 		paypal: {
-			instructions: "Integrate PayPal payment processing",
+			instructions: `
+				Integrate PayPal payments with auto-dependency resolution:
+				1. Retrieve the latest version of PayPal's React SDK.
+				2. Install the PayPal React SDK.
+				3. Set up a PayPal Developer account and create a sandbox application to obtain your client ID.
+				4. Configure the PayPal provider in your application using the client ID.
+				5. Add PayPal buttons to your application to facilitate payments.
+				6. Implement server-side logic to handle payment authorizations and captures.
+				7. Set up a webhook endpoint to listen for PayPal events (e.g., payment completed, refunds) and handle them appropriately.
+				8. Ensure that your application securely handles payment data and complies with PayPal's integration guidelines.
+			`,
 			env: ["PAYPAL_CLIENT_ID", "PAYPAL_SECRET"],
 			sampleCode: {
 				files: [
@@ -319,7 +421,17 @@ export const dependencyMap = {
 	},
 	cms: {
 		sanity: {
-			instructions: "Setup Sanity studio and schemas",
+			instructions: `
+				Integrate Sanity CMS with auto-dependency resolution:
+					1. Install the Sanity CLI globally.
+					2. Initialize a new Sanity project within your application.
+					3. Define the necessary schemas for your content types in the Sanity Studio.
+					4. Deploy the Sanity Studio to manage content.
+					5. Install the Sanity client in your application.
+					6. Configure the Sanity client with your project ID and dataset.
+					7. Fetch content from Sanity and render it within your React components.
+					8. Ensure that your application handles content updates and errors gracefully.
+			`,
 			env: ["SANITY_PROJECT_ID", "SANITY_DATASET"],
 			sampleCode: {
 				files: [
@@ -338,7 +450,19 @@ export const dependencyMap = {
 			},
 		},
 		contentful: {
-			instructions: "Setup Contentful client configuration",
+			instructions: `
+				Integrate Contentful CMS with auto-dependency resolution:
+					1. Retrieve the latest version of the Contentful JavaScript SDK.
+					2. Install the Contentful JavaScript SDK.
+					3. Set up a Contentful account and create a new space.
+					4. Within the Contentful space:
+					5. Define the necessary content models.
+					6. Add entries for each content model.
+					7. Obtain the Space ID and Content Delivery API access token from the Contentful dashboard.
+					8. Configure the Contentful client in your application using the obtained credentials.
+					9. Fetch content from Contentful and render it within your React components.
+					10. Ensure that your application handles content updates and errors gracefully
+			`,
 			env: ["CONTENTFUL_SPACE_ID", "CONTENTFUL_ACCESS_TOKEN"],
 			sampleCode: {
 				files: [
@@ -373,7 +497,8 @@ export const dependencyMap = {
 	},
 	database: {
 		firebase: {
-			instructions: "Initialize Firebase config in services/firebase",
+			instructions:
+				"Initialize Firebase config in services/firebase. Provide a sample code to initialize Firebase app using the environment variables: REACT_APP_FIREBASE_API_KEY, REACT_APP_FIREBASE_AUTH_DOMAIN, REACT_APP_FIREBASE_PROJECT_ID. The code should include the process of setting up the Firebase app and exporting the instance.",
 			env: [
 				"REACT_APP_FIREBASE_API_KEY",
 				"REACT_APP_FIREBASE_AUTH_DOMAIN",
@@ -383,53 +508,36 @@ export const dependencyMap = {
 				files: [
 					{
 						path: "src/services/firebase.js",
-						content: `
-              import { initializeApp } from 'firebase/app';
-              const firebaseConfig = {
-                apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-                authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-                projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-              };
-              const app = initializeApp(firebaseConfig);
-              export default app;
-            `,
+						content:
+							"import { initializeApp } from 'firebase/app';\nconst firebaseConfig = {\n  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,\n  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,\n  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,\n};\nconst app = initializeApp(firebaseConfig);\nexport default app;",
 					},
 				],
 			},
 		},
 		supabase: {
-			instructions: "Create Supabase client and initialize with API keys",
+			instructions:
+				"Create a Supabase client and initialize it with the API keys. Provide a sample code to initialize the Supabase client using the environment variables: SUPABASE_URL, SUPABASE_API_KEY. The code should include creating the client and exporting the instance.",
 			env: ["SUPABASE_URL", "SUPABASE_API_KEY"],
 			sampleCode: {
 				files: [
 					{
 						path: "lib/supabase.js",
-						content: `
-              import { createClient } from '@supabase/supabase-js';
-              const supabase = createClient(
-                process.env.SUPABASE_URL,
-                process.env.SUPABASE_API_KEY
-              );
-              export default supabase;
-            `,
+						content:
+							"import { createClient } from '@supabase/supabase-js';\nconst supabase = createClient(\n  process.env.SUPABASE_URL,\n  process.env.SUPABASE_API_KEY\n);\nexport default supabase;",
 					},
 				],
 			},
 		},
 		appwrite: {
-			instructions: "Setup Appwrite client and configuration",
+			instructions:
+				"Set up Appwrite client and configure it with the necessary endpoint and project ID. Provide a sample code to initialize the Appwrite client using the environment variables: APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID. The code should include creating the client instance and exporting it.",
 			env: ["APPWRITE_ENDPOINT", "APPWRITE_PROJECT_ID"],
 			sampleCode: {
 				files: [
 					{
 						path: "lib/appwrite.js",
-						content: `
-              import { Client } from 'appwrite';
-              const client = new Client()
-                .setEndpoint(process.env.APPWRITE_ENDPOINT)
-                .setProject(process.env.APPWRITE_PROJECT_ID);
-              export default client;
-            `,
+						content:
+							"import { Client } from 'appwrite';\nconst client = new Client()\n  .setEndpoint(process.env.APPWRITE_ENDPOINT)\n  .setProject(process.env.APPWRITE_PROJECT_ID);\nexport default client;",
 					},
 				],
 			},
@@ -437,7 +545,14 @@ export const dependencyMap = {
 	},
 	emailing: {
 		resend: {
-			instructions: "Transactional email service with React components",
+			instructions: `
+				Integrate Resend for transactional emails:
+					1. Install Resend SDK: \`npm install resend\`
+					2. Create email templates in components/emails/
+					3. Add Resend API key to .env or config env file
+					4. Create API route for sending emails
+					5. Wrap email components with React Email if needed
+			`,
 			env: ["RESEND_API_KEY"],
 			sampleCode: {
 				files: [
@@ -463,7 +578,13 @@ export const dependencyMap = {
 			},
 		},
 		sendgrid: {
-			instructions: "Email delivery service with template support",
+			instructions: `
+				Integrate SendGrid for email delivery:
+					1. Install SendGrid SDK: \`npm install @sendgrid/mail\`
+					2. Add SendGrid API key and from email to .env or config files
+					3. Create email templates in emails/
+					4. Set up email service in lib/emails.js
+			`,
 			env: ["SENDGRID_API_KEY", "SENDGRID_FROM_EMAIL"],
 			sampleCode: {
 				files: [
