@@ -24,7 +24,6 @@ import {
 	latestTemplates,
 } from "../controllers/templates/index.js";
 import {
-	aiGenKit,
 	answerGenAiApi,
 	createRepo,
 	getAllYogaAsanas,
@@ -54,7 +53,11 @@ import {
 	getNotionDatabaseIds,
 } from "../controllers/notion/index.js";
 import { createBasicStarterRepo } from "../controllers/langchain/index.js";
-import { generateCustomRepo } from "../controllers/customrepos/index.js";
+import {
+	generateCustomRepo,
+	generateDependencyGraph,
+	updateCustomRepo,
+} from "../controllers/customrepos/index.js";
 
 const router = express.Router();
 
@@ -65,8 +68,10 @@ router.get("/v1/custom-repo/login", firebaseLogin);
 
 // custom repo download api
 router.post("/v1/api/custom-repo/download-repo", downloadRepo);
-router.get("/v1/api/getCustomRepos", () => {});
+router.post("/v1/api/get-custom-repo-graph", generateDependencyGraph);
 router.post("/v1/api/generate-custom-repo", generateCustomRepo);
+
+router.post("/v1/api/update-custom-repo", updateCustomRepo);
 
 // google auth api
 router.get(

@@ -1,7 +1,8 @@
 export const dependencyMap = {
 	frameworks: {
 		"next.js": {
-			description: "Create pages/ directory with SSR setup and next config file with sample code",
+			description:
+				"Create pages/ directory with SSR setup and next config file with sample code",
 			sampleCode: {
 				files: [
 					{
@@ -42,7 +43,7 @@ export const dependencyMap = {
 		},
 		"vite.js": {
 			description:
-				"Generate a Vite (Vue 3) project with vite config file",
+				"Generate a Vite (Vue 3) project with vite config file in the root directory(vite.config.js)",
 			sampleCode: {
 				files: [
 					{
@@ -249,7 +250,7 @@ export const dependencyMap = {
 			},
 		},
 	},
-	payments: {
+	payment: {
 		stripe: {
 			description: "Create api/stripe with webhook handlers",
 			env: ["STRIPE_API_KEY"],
@@ -272,7 +273,7 @@ export const dependencyMap = {
 			sampleCode: {
 				files: [
 					{
-						path: "lib/payments/paypal.js",
+						path: "lib/payment/paypal.js",
 						content: `
               import paypal from '@paypal/checkout-server-sdk';
               const environment = new paypal.core.SandboxEnvironment(
@@ -292,7 +293,7 @@ export const dependencyMap = {
 			sampleCode: {
 				files: [
 					{
-						path: "lib/payments/lemonsqueezy.js",
+						path: "lib/payment/lemonsqueezy.js",
 						content: `
               import axios from 'axios';
               const client = axios.create({
@@ -322,6 +323,39 @@ export const dependencyMap = {
                 plugins: [],
               });
             `,
+					},
+				],
+			},
+		},
+		contentful: {
+			description: "Setup Contentful client configuration",
+			env: ["CONTENTFUL_SPACE_ID", "CONTENTFUL_ACCESS_TOKEN"],
+			sampleCode: {
+				files: [
+					{
+						path: "config/contentful.js",
+						content: `
+          import { createClient } from 'contentful';
+          
+          export const contentfulClient = createClient({
+            space: process.env.CONTENTFUL_SPACE_ID,
+            accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
+            environment: 'master'
+          });
+        `,
+					},
+					{
+						path: "lib/contentful.js",
+						content: `
+          import { contentfulClient } from '../config/contentful';
+          
+          export async function getEntries(contentType) {
+            return await contentfulClient.getEntries({
+              content_type: contentType,
+              include: 2
+            });
+          }
+        `,
 					},
 				],
 			},
@@ -385,6 +419,71 @@ export const dependencyMap = {
                 .setEndpoint(process.env.APPWRITE_ENDPOINT)
                 .setProject(process.env.APPWRITE_PROJECT_ID);
               export default client;
+            `,
+					},
+				],
+			},
+		},
+	},
+	emailing: {
+		resend: {
+			description: "Transactional email service with React components",
+			env: ["RESEND_API_KEY"],
+			sampleCode: {
+				files: [
+					{
+						path: "lib/email/config.js",
+						content: `
+              import { Resend } from 'resend';
+              export const resend = new Resend(process.env.RESEND_API_KEY);
+            `,
+					},
+					{
+						path: "components/EmailTemplate.jsx",
+						content: `
+              export const EmailTemplate = ({ name }) => (
+                <div>
+                  <h1>Welcome, {name}!</h1>
+                  <p>Thanks for joining our service.</p>
+                </div>
+              )
+            `,
+					},
+				],
+			},
+		},
+		sendgrid: {
+			description: "Email delivery service with template support",
+			env: ["SENDGRID_API_KEY", "SENDGRID_FROM_EMAIL"],
+			sampleCode: {
+				files: [
+					{
+						path: "services/email.js",
+						content: `
+              import sgMail from '@sendgrid/mail';
+              sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+              
+              export const sendWelcomeEmail = (to) => {
+                const msg = {
+                  to,
+                  from: process.env.SENDGRID_FROM_EMAIL,
+                  subject: 'Welcome!',
+                  text: 'Thanks for signing up!'
+                };
+                return sgMail.send(msg);
+              }
+            `,
+					},
+					{
+						path: "emails/welcome-template.html",
+						content: `
+              <!DOCTYPE html>
+              <html>
+                <body>
+                  <h1>Welcome {{name}}!</h1>
+                  <p>We're excited to have you on board.</p>
+                </body>
+              </html>
             `,
 					},
 				],
