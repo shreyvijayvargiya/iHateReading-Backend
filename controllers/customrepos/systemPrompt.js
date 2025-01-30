@@ -11,7 +11,7 @@ export const getSystemPrompt = (dependencyGraph) => `
 			.map(([category, tech]) => {
 				const techDetails = dependencyMap[category]?.[tech];
 				if (!techDetails) return "";
-				const { description, env, sampleCode } = techDetails;
+				const { instructions, env, sampleCode } = techDetails;
 
 				const sampleFiles = sampleCode?.files
 					?.map(
@@ -25,7 +25,7 @@ export const getSystemPrompt = (dependencyGraph) => `
 					: "";
 
 				return `
-          • ${tech.toUpperCase()}: ${description}
+          • ${tech.toUpperCase()}: ${instructions}
             ${envVariables}
             Sample Files:\n${sampleFiles}
         `;
@@ -38,6 +38,7 @@ export const getSystemPrompt = (dependencyGraph) => `
 			new Date().toISOString().split("T")[0]
 		})
     2. Follow official documentation patterns
+    3. Add the required files/providers/utils/lib/code samples
     3. Include essential config files
     4. Implement security best practices
 

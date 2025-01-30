@@ -22,16 +22,40 @@ export const generateCustomRepo = async (req, res) => {
 		const { dependencyGraph } = req.body;
 		const systemPrompt = getSystemPrompt(dependencyGraph);
 
+		res.setHeader("Content-Type", "text/event-stream");
+		res.setHeader("Cache-Control", "no-cache");
+		res.setHeader("Connection", "keep-alive");
+
+		const sendEvent = (message) => {
+			res.write(`data: ${JSON.stringify({ message })}\n\n`);
+		};
+
+		sendEvent("Initializing repository generation...");
+
 		const response = await client.invoke([
 			new SystemMessage(systemPrompt),
 			new HumanMessage("Generate the defined repository structure"),
 		]);
 
-		const validated = DirSchema.parse(JSON.parse(response.content));
-		res.send(validated);
-	} catch (e) {
-		console.log(e, "error in generating custom repo");
-		res.send("Error in generating custom repo");
+		sendEvent("Repository structure generated...");
+		sendEvent("Validating the repository");
+		try {
+			const validated = DirSchema.parse(JSON.parse(response.content));
+			sendEvent("Repository validation successful.");
+			res.write(`data: ${JSON.stringify({ validated })}\n\n`);
+		} catch (validationError) {
+			sendEvent("Error during validation.");
+			throw validationError;
+		}
+		res.end();
+	} catch (error) {
+		console.error("Error in generating custom repo:", error);
+		res.write(
+			`data: ${JSON.stringify({
+				error: "Error in generating custom repo",
+			})}\n\n`
+		);
+		res.end();
 	}
 };
 

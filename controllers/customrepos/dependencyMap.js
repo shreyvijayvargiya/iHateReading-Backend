@@ -1,8 +1,8 @@
 export const dependencyMap = {
 	frameworks: {
 		"next.js": {
-			description:
-				"Create pages/ directory with SSR setup and next config file with sample code",
+			instructions:
+				"Create pages/ directory with SSR setup and next config file along with sample code",
 			sampleCode: {
 				files: [
 					{
@@ -13,11 +13,17 @@ export const dependencyMap = {
               }
             `,
 					},
+					{
+						path: "next.config.js",
+						content: `
+							module.exports = () => {}
+            `,
+					},
 				],
 			},
 		},
 		"create-react-app": {
-			description: "Generate src/ structure with React 18+",
+			instructions: "Generate src/ structure with React 18+",
 			sampleCode: {
 				files: [
 					{
@@ -42,7 +48,7 @@ export const dependencyMap = {
 			},
 		},
 		"vite.js": {
-			description:
+			instructions:
 				"Generate a Vite (Vue 3) project with vite config file in the root directory(vite.config.js)",
 			sampleCode: {
 				files: [
@@ -59,13 +65,17 @@ export const dependencyMap = {
               </script>
             `,
 					},
+					{
+						path: "vite.config.js",
+						content: ""
+					}
 				],
 			},
 		},
 	},
 	ui: {
 		antd: {
-			description: "Configure Ant Design in src/antd",
+			instructions: "Configure Ant Design in src/antd",
 			sampleCode: {
 				files: [
 					{
@@ -82,7 +92,7 @@ export const dependencyMap = {
 			},
 		},
 		"shadcn/ui": {
-			description: "Add components/ with shadcn primitives",
+			instructions: "Add components/ with shadcn primitives",
 			sampleCode: {
 				files: [
 					{
@@ -97,7 +107,7 @@ export const dependencyMap = {
 			},
 		},
 		mui: {
-			description: "Create theme/ directory with Material UI config",
+			instructions: "Create theme/ directory with Material UI config",
 			sampleCode: {
 				files: [
 					{
@@ -112,7 +122,7 @@ export const dependencyMap = {
 			},
 		},
 		antd: {
-			description: "Configure Ant Design in src/antd",
+			instructions: "Configure Ant Design in src/antd",
 			sampleCode: {
 				files: [
 					{
@@ -131,7 +141,7 @@ export const dependencyMap = {
 	},
 	styling: {
 		tailwindcss: {
-			description: "Generate tailwind.config.js + postcss.config.js",
+			instructions: "Generate tailwind.config.js + postcss.config.js",
 			sampleCode: {
 				files: [
 					{
@@ -150,7 +160,7 @@ export const dependencyMap = {
 			},
 		},
 		"css-modules": {
-			description: "Create styles/ directory with .module.css files",
+			instructions: "Create styles/ directory with .module.css files",
 			sampleCode: {
 				files: [
 					{
@@ -166,7 +176,7 @@ export const dependencyMap = {
 			},
 		},
 		"styled-components": {
-			description: "Add theme provider and base styles",
+			instructions: "Add theme provider and base styles",
 			sampleCode: {
 				files: [
 					{
@@ -199,7 +209,7 @@ export const dependencyMap = {
 	},
 	statemanagement: {
 		zustand: {
-			description: "Create store/ with Zustand slices",
+			instructions: "Create store/ with Zustand slices",
 			sampleCode: {
 				files: [
 					{
@@ -217,7 +227,7 @@ export const dependencyMap = {
 			},
 		},
 		redux: {
-			description: "Generate redux store with toolkit",
+			instructions: "Generate redux store with toolkit",
 			sampleCode: {
 				files: [
 					{
@@ -252,7 +262,7 @@ export const dependencyMap = {
 	},
 	payment: {
 		stripe: {
-			description: "Create api/stripe with webhook handlers",
+			instructions: "Create api/stripe with webhook handlers",
 			env: ["STRIPE_API_KEY"],
 			sampleCode: {
 				files: [
@@ -268,7 +278,7 @@ export const dependencyMap = {
 			},
 		},
 		paypal: {
-			description: "Integrate PayPal payment processing",
+			instructions: "Integrate PayPal payment processing",
 			env: ["PAYPAL_CLIENT_ID", "PAYPAL_SECRET"],
 			sampleCode: {
 				files: [
@@ -288,7 +298,7 @@ export const dependencyMap = {
 			},
 		},
 		lemonsqueezy: {
-			description: "Add LemonSqueezy client integration",
+			instructions: "Add LemonSqueezy client integration",
 			env: ["LEMON_API_KEY"],
 			sampleCode: {
 				files: [
@@ -309,7 +319,7 @@ export const dependencyMap = {
 	},
 	cms: {
 		sanity: {
-			description: "Setup Sanity studio and schemas",
+			instructions: "Setup Sanity studio and schemas",
 			env: ["SANITY_PROJECT_ID", "SANITY_DATASET"],
 			sampleCode: {
 				files: [
@@ -328,7 +338,7 @@ export const dependencyMap = {
 			},
 		},
 		contentful: {
-			description: "Setup Contentful client configuration",
+			instructions: "Setup Contentful client configuration",
 			env: ["CONTENTFUL_SPACE_ID", "CONTENTFUL_ACCESS_TOKEN"],
 			sampleCode: {
 				files: [
@@ -363,7 +373,7 @@ export const dependencyMap = {
 	},
 	database: {
 		firebase: {
-			description: "Initialize Firebase config in services/firebase",
+			instructions: "Initialize Firebase config in services/firebase",
 			env: [
 				"REACT_APP_FIREBASE_API_KEY",
 				"REACT_APP_FIREBASE_AUTH_DOMAIN",
@@ -388,7 +398,7 @@ export const dependencyMap = {
 			},
 		},
 		supabase: {
-			description: "Create Supabase client and initialize with API keys",
+			instructions: "Create Supabase client and initialize with API keys",
 			env: ["SUPABASE_URL", "SUPABASE_API_KEY"],
 			sampleCode: {
 				files: [
@@ -407,7 +417,7 @@ export const dependencyMap = {
 			},
 		},
 		appwrite: {
-			description: "Setup Appwrite client and configuration",
+			instructions: "Setup Appwrite client and configuration",
 			env: ["APPWRITE_ENDPOINT", "APPWRITE_PROJECT_ID"],
 			sampleCode: {
 				files: [
@@ -427,7 +437,7 @@ export const dependencyMap = {
 	},
 	emailing: {
 		resend: {
-			description: "Transactional email service with React components",
+			instructions: "Transactional email service with React components",
 			env: ["RESEND_API_KEY"],
 			sampleCode: {
 				files: [
@@ -453,7 +463,7 @@ export const dependencyMap = {
 			},
 		},
 		sendgrid: {
-			description: "Email delivery service with template support",
+			instructions: "Email delivery service with template support",
 			env: ["SENDGRID_API_KEY", "SENDGRID_FROM_EMAIL"],
 			sampleCode: {
 				files: [
