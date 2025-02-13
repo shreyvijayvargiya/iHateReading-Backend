@@ -54,8 +54,14 @@ import {
 } from "../controllers/notion/index.js";
 import { createBasicStarterRepo } from "../controllers/langchain/index.js";
 import {
+	benchmarkLLMModels,
+	convertHtmlToMarkdownAndGenerateGraph,
+	generateComponent,
 	generateCustomRepo,
 	generateDependencyGraph,
+	generateRoadmap,
+	generateUIVariants,
+	summarizeBlogContent,
 	updateCustomRepo,
 } from "../controllers/customrepos/index.js";
 
@@ -69,8 +75,15 @@ router.get("/v1/custom-repo/login", firebaseLogin);
 // custom repo download api
 router.post("/v1/api/custom-repo/download-repo", downloadRepo);
 router.post("/v1/api/get-custom-repo-graph", generateDependencyGraph);
+router.post("/v1/api/generateRoadmap", generateRoadmap);
+router.post("/v1/api/generate-ui-variants", generateComponent);
+router.post("/v1/api/benchmark-llm-models", benchmarkLLMModels);
 router.post("/v1/api/generate-custom-repo", generateCustomRepo);
-
+router.post("/v1/api/summarize-blog-content", summarizeBlogContent);
+router.post(
+	"/v1/api/get-knowledge-graph",
+	convertHtmlToMarkdownAndGenerateGraph
+);
 router.post("/v1/api/update-custom-repo", updateCustomRepo);
 
 // google auth api

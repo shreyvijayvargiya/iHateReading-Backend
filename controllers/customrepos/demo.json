@@ -1,0 +1,82 @@
+{
+	"name": "create-next-app",
+	"type": "directory",
+	"children": [
+		{
+			"name": "package.json",
+			"type": "file",
+			"content": {
+				"name": "create-next-app",
+				"author": "",
+				"scripts": {
+					"dev": "next dev",
+					"build": "next build",
+					"start": "next start"
+				},
+				"engines": {
+					"node": ">=14.0.0"
+				},
+				"license": "MIT",
+				"version": "1.0.0",
+				"dependencies": {
+					"next": "^14.0.0",
+					"react": "^18.2.0",
+					"react-dom": "^18.2.0"
+				}
+			}
+		},
+		{
+			"name": ".gitignore",
+			"type": "file",
+			"content": "node_modules/\n.next/\n.env.local\n"
+		},
+		{
+			"name": "README.md",
+			"type": "file",
+			"content": "# Create Next App\n\nThis is a project generated with Next.js."
+		},
+		{
+			"name": ".env.local",
+			"type": "file",
+			"content": "NEXT_PUBLIC_API_URL=http://localhost:3000/api\n"
+		},
+		{
+			"name": "app",
+			"type": "directory",
+			"children": [
+				{
+					"name": "page.tsx",
+					"type": "file",
+					"content": "export default function Home() {\n  return (\n    <main className=\"flex min-h-screen flex-col items-center p-24\">\n      <h1>Welcome to Next.js</h1>\n    </main>\n  );\n}\n"
+				},
+				{
+					"name": "layout.tsx",
+					"type": "file",
+					"content": "export default function RootLayout({\n  children,\n}: {\n  children: React.ReactNode\n}) {\n  return (\n    <html lang=\"en\">\n      <body>{children}</body>\n    </html>\n  );\n}\n"
+				},
+				{
+					"name": "api",
+					"type": "directory",
+					"children": [
+						{
+							"name": "hello",
+							"type": "directory",
+							"children": [
+								{
+									"name": "route.ts",
+									"type": "file",
+									"content": "export async function GET() {\n  return Response.json({ message: 'Hello from Next.js!' });\n}\n"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "next.config.js",
+			"type": "file",
+			"content": "/** @type {import('next').NextConfig} */\nconst nextConfig = {\n  reactStrictMode: true,\n  swcMinify: true,\n};\nmodule.exports = nextConfig;\n"
+		}
+	]
+}

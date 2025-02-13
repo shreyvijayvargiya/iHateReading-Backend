@@ -2,40 +2,68 @@ export const dependencyMap = {
 	frameworks: {
 		"next.js": {
 			instructions: `
-        Generate a comprehensive Next.js 14 boilerplate with the following:
-        1. Core dependencies: next, react, react-dom
-        2. Basic project structure:
-           - pages/ directory with SSR setup
-           - public/ for static assets
-           - src/ for components and utilities
-        3. Essential configurations:
-           - next.config.js with basic settings
-           - .env template for environment variables
-           - .eslintrc.json for linting
-        4. Example files:
-           - pages/index.js with a basic home page
-           - pages/api/hello.js for API route example
-           - src/components/Layout.jsx for shared layout
-					 - pages/_app.js for wrapper 
-        5. Documentation:
-           - README.md with setup instructions
-      `,
+				Setup Next.js 14 project:
+				1. Choose template: JS/TS with App/Pages Router
+				2. Core setup:
+					- Install: next, react, react-dom
+					- Configure next.config.js
+					- Add .env.local template
+				3. Add key features:
+					- API routes
+					- Layouts/Components
+					- Data fetching via SSR
+					- Routing setup in _app.js and pages
+				4. Enable TypeScript (optional)
+			`,
 			sampleCode: {
 				files: [
 					{
-						path: "pages/index.js",
+						path: "app/page.tsx",
 						content: `
-              export default function Home() {
-                return <h1>Welcome to Next.js with SSR!</h1>;
-              }
-            `,
+							export default function Home() {
+								return (
+									<main className="flex min-h-screen flex-col items-center p-24">
+										<h1>Welcome to Next.js</h1>
+									</main>
+								);
+							}
+						`,
+					},
+					{
+						path: "app/layout.tsx", 
+						content: `
+							export default function RootLayout({
+								children,
+							}: {
+								children: React.ReactNode
+							}) {
+								return (
+									<html lang="en">
+										<body>{children}</body>
+									</html>
+								);
+							}
+						`,
+					},
+					{
+						path: "app/api/hello/route.ts",
+						content: `
+							export async function GET() {
+								return Response.json({ message: 'Hello from Next.js!' });
+							}
+						`,
 					},
 					{
 						path: "next.config.js",
 						content: `
-							module.exports = () => {}
-            `,
-					},
+							/** @type {import('next').NextConfig} */
+							const nextConfig = {
+								reactStrictMode: true,
+								swcMinify: true,
+							}
+							module.exports = nextConfig;
+						`,
+					}
 				],
 			},
 		},
@@ -346,14 +374,14 @@ export const dependencyMap = {
 		stripe: {
 			instructions: `
 				Integrate Stripe payments with auto-dependency resolution:
-				Retrieve the latest version of Stripe's React library.
-				Install the required Stripe packages.
-				Set up a Stripe account and obtain your API keys from the Stripe Dashboard.
-				Configure the Stripe provider in your application to initialize Stripe.
-				Create a payment form using Stripe Elements to securely collect payment details.
-				Implement server-side logic to create payment intents and handle payment confirmations.
-				Set up a webhook endpoint to listen for Stripe events (e.g., payment success, failure) and handle them appropriately.
-				Ensure that your application securely handles sensitive payment information and complies with PCI DSS standards.
+				1. Retrieve the latest version of Stripe's React library
+				2. Install the required Stripe packages
+				3. Set up a Stripe account and obtain your API keys from the Stripe Dashboard
+				4. Configure the Stripe provider in your application to initialize Stripe
+				5. Create a payment form using Stripe Elements to securely collect payment details
+				6. Implement server-side logic to create payment intents and handle payment confirmations
+				7. Set up a webhook endpoint to listen for Stripe events (e.g., payment success, failure) and handle them appropriately
+				8. Ensure that your application securely handles sensitive payment information and complies with PCI DSS standards
 			`,
 			env: ["STRIPE_API_KEY"],
 			sampleCode: {
@@ -497,8 +525,12 @@ export const dependencyMap = {
 	},
 	database: {
 		firebase: {
-			instructions:
-				"Initialize Firebase config in services/firebase. Provide a sample code to initialize Firebase app using the environment variables: REACT_APP_FIREBASE_API_KEY, REACT_APP_FIREBASE_AUTH_DOMAIN, REACT_APP_FIREBASE_PROJECT_ID. The code should include the process of setting up the Firebase app and exporting the instance.",
+			instructions: `Initialize Firebase config in services/firebase. 
+				Provide a sample code to initialize Firebase app using the environment variables: 
+				REACT_APP_FIREBASE_API_KEY, 
+				REACT_APP_FIREBASE_AUTH_DOMAIN, 
+				REACT_APP_FIREBASE_PROJECT_ID. 
+			The code should include the process of setting up the Firebase app and exporting the instance.`,
 			env: [
 				"REACT_APP_FIREBASE_API_KEY",
 				"REACT_APP_FIREBASE_AUTH_DOMAIN",

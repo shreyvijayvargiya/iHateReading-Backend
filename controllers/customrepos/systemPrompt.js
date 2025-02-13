@@ -1,5 +1,6 @@
 import { dependencyMap } from "./dependencyMap.js";
 import z from "zod";
+import { dependencyGraphSchema } from "./schema.js";
 
 export const getSystemPrompt = (dependencyGraph) => `
   You are a professional project generator. Create a repository structure for:
@@ -97,7 +98,7 @@ export const getSystemPrompt = (dependencyGraph) => `
 `;
 
 export const getDependencySystemPrompt = (userPrompt) => `
-  You are an expert full-stack architect. Analyze the user's request and generate the optimal technology stack:
+  You are a highly skilled full-stack architect. Please analyze the user's request thoroughly and generate the most suitable technology stack:
 
   **User Request**:
   "${userPrompt}"
@@ -105,47 +106,42 @@ export const getDependencySystemPrompt = (userPrompt) => `
   **Decision Framework**:
   1. Project Type Detection:
     - Static Site: Next.js + Tailwind
-    - Blog/Content: + Sanity CMS
-    - E-commerce: + Stripe + Firebase
-    - Dashboard: + Supabase + MUI
+    - Blog/Content: Sanity CMS
+    - E-commerce: Stripe + Firebase
+    - Dashboard: Supabase + MUI
     - Simple App: Create React App + CSS Modules
 
   2. Scalability Rules:
-    - >10 pages: Next.js
-    - User auth: Firebase/Supabase
-    - Complex state: Zustand/Redux
-    - CMS needed: Sanity/Contentful
+    - More than 10 pages: Next.js
+    - User authentication: Firebase/Supabase
+    - Complex state management: Zustand/Redux
+    - CMS required: Sanity/Contentful/Strapi/Wordpress
 
   3. Performance Priorities:
-    - SSR/SSG for content sites
-    - Static exports for marketing sites
-    - ISR for dynamic content
+    - Use SSR/SSG for content-heavy sites
+    - Utilize static exports for marketing sites
+    - Implement ISR for dynamic content
 
   4. Complexity Control:
-    - Avoid databases unless mentioned
-    - Skip payments unless selling
-    - Omit CMS unless content management needed
+    - Avoid introducing databases unless specified
+    - Skip payment integrations unless selling products
+    - Omit CMS unless content management is necessary
 
   **Output Requirements**:
-  - Format: Strict JSON matching Zod schema
-  - Include ONLY necessary technologies
-  - Add comments for non-obvious choices
-  - Environment variables naming:
-    - NEXT_PUBLIC_* for frontend
-    - VITE_* for Vite projects
-    - REACT_APP_* for CRA
+  - Format: Strict JSON adhering to the Zod schema
+  - Include ONLY essential technologies
 
   **Examples**:
   1. Non-technical input:
-    "Make a cat photo gallery"
+    "Create a cat photo gallery"
     Output: { 
       frameworks: "next.js",
       styling: "tailwindcss",
-      cms: "sanity" 
+      cms: "sanity"
     }
 
   2. Technical input:
-    "Create a blog with ISR and auth"
+    "Build a blog with ISR and authentication"
     Output: {
       frameworks: "next.js",
       styling: "tailwindcss",
@@ -154,25 +150,58 @@ export const getDependencySystemPrompt = (userPrompt) => `
     }
 
   3. Simple request: 
-    "Landing page for my bakery"
+    "Design a landing page for my bakery"
     Output: {
       frameworks: "next.js",
       styling: "tailwindcss"
     }
 
   **Response Schema**:
-  \`\`\`json
   {
     "projectname": "generated-name",
     "frameworks": "next.js",
     "styling": "tailwindcss",
-    "database?:": "firebase|supabase|null",
-    "ui?:": "shadcn/ui|mui|antd|null", 
-    "cms?:": "sanity|contentful|null",
-    "payment?:": "stripe|paypal|null"
+    "database": "firebase|supabase|null",
+    "ui": "shadcn/ui|mui|antd|null", 
+    "cms": "sanity|contentful|null",
+    "payment": "stripe|paypal|null",
+    "emailing": "resend|sendgrid|null",
+    "statemanagement": "redux|zustand|null",
+    "routing": "next.js|react-router|null",
+    "testing": "jest|vitest|null",
+    "linting": "eslint|prettier|null",
+    "deployment": "vercel|netlify|null",
+    "authentication": "firebase|supabase|null",
+    "api": "firebase|supabase|null",
+    "monitoring": "sentry|logrocket|null",
+    "analytics": "google-analytics|mixpanel|null",
+    "seo": "next-seo|react-helmet|null",
+    "other": null
   }
-  \`\`\`
+`;
 
+export const getRoadmapSystemPrompt = (userPrompt) => `
+  You are a senior software developer or CTO. Please create a detailed roadmap for the features that the user can follow to develop the project based on their request:
+
+  **User Request**:
+  "${userPrompt}"
+
+  **Tech Stack Selection**:
+  Please select the appropriate tech stack based on the following schema: ${dependencyGraphSchema}. Ensure that your choices align with the project requirements and best practices for optimal performance and maintainability.
+
+  **Roadmap Requirements**:
+  1. Break down the project into key features, tech stack and project structure only
+  2. For each feature, identify task name, steps only
+  3. For steps be very specific about the steps to add that feature no general steps or nonsense or plain english
+  4. Prefer full-stack apps no express or backend only frontend
+
+  **Output Format**:
+  - Format: Structured JSON with clear sections for each feature and its tasks.
+  - Select the tech stack based on the project requirements and best practices outlined in the schema: ${dependencyGraphSchema}.
+  - Construct the project structure using the selected tech stack and the features defined in the roadmap, ensuring alignment with the schema: ${dependencyGraphSchema}.
+  - Remove any irrelevant features, steps, stack, and structure.
+  - No extra text or comments
+  
 `;
 
 export const DependencySchema = z

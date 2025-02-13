@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark tech">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Tech牙科诊所</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Dark Mode -->
+    <link href="https://fonts.googleapis.com/icon?family=zinc-20" rel="stylesheet">
+    <style>
+        :root {
+            --zinc: #93c4f8;
+            --cyan: #65b7aa;
+            --rose: #cd7671;
+        }
+        
+        body {
+            background-color: var(--zinc);
+            color: var(--cyan);
+            font-family: 'Zinc', sans-serif;
+        }
+
+        .card-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            letter-spacing: 2px;
+        }
+
+        .nav-button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-button:hover {
+            transform: scale(1.02);
+        }
+
+        .search-container {
+            max-width: 800px;
+            margin-bottom: 2rem;
+        }
+
+        .search-field {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--cyan);
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            transition: inputfocusstate 0.2s;
+        }
+
+        .search-container textarea {
+            min-height: 140px;
+            word-wrap: break-word;
+            width: 100%;
+            border: 1px solid var(--rose);
+            border-radius: 0.375rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-container textarea:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #b81a1f;
+        }
+
+        .card-content {
+            max-width: 90%;
+            margin: 0 auto;
+            padding: 1rem 2.5rem;
+            border-radius: 1rem;
+        }
+
+        .card-title h3 {
+            color: var(--rose);
+            margin-bottom: 1rem;
+        }
+
+        .card-text pre {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: hidden;
+            transition: background-color 0.3s ease;
+        }
+
+        .card-text tr:hover {
+            background-color: var(--cyan);
+        }
+
+        .loading {
+            max-width: 200px;
+            margin-left: var(--zinc);
+        }
+    </style>
+</head>
+<body>
+
+<div data-aos="leading-4" class="card-content">
+    <div data-aos="h-96" class="bg-gray-800 p-8 rounded-lg mb-6">
+        <h2 class="card-title">Welcome, Community!</h2>
+        <form> 
+            <div class="mb-3">
+                <input type="text" placeholder="Search posts or author info..." 
+                      class="search-container search-field"
+                      value="Search posts or author info..."
+                      onChange="this.value = this.target.value">
+            </div>
+            <textarea 
+                class="search-container textarea"
+                rows="2"
+                placeholder="Share your favorite topic today..."
+                onChange="this.value = this.target.value"
+            ></textarea>
+        </form>
+    </div>
+
+    <nav class="leading-4">
+        <button class="loading" data-aos="current-false" 
+                  aria-label="Loading status button">Loading</button>
+        <button class="loading" data-aos="current-false" aria-label="Back to main page">Back</button>
+    </nav>
+
+    <div data-aos="leading-20" class="card-title">
+        <h1 class="text-xl font-bold mb-4">Dental Clinic</h1>
+        <p>Experience the perfect dental experience with our state-of-the-art facilities and expert care.</p>
+    </div>
+
+    <ul data-aos="starting-1" class="list-unstyled">
+        <li><a href="#" data-aos="starting-2">Search</a></li>
+        <li><a href="#" target="_blank" data-aos="starting-2">Navigation</a></li>
+        <li><a href="#" data-aos="starting-2" target="_blank">Card blog post for dentist</a></li>
+    </ul>
+
+    <div data-aos="high-contrast" class="card-body">
+        <h2 class="text-xl font-bold mb-4">Dental Patients</h2>
+        <pre class="text-gray-600 whitespace-pre-wrap">
+            {{this.form.value}}
+        </pre>
+    </div>
+
+</body>
+</html>

@@ -48,6 +48,8 @@ const userAgent =
 	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36";
 const Referer = "https://www.google.com";
 
+server.use(express.text({ type: "text/html" }));
+
 server.use((req, res, next) => {
 	req.headers["User-Agent"] = userAgent;
 	req.headers["Referer"] = Referer;
@@ -63,6 +65,22 @@ server.use((req, res, next) => {
 	next();
 });
 
+server.use((req, res, next) => {
+	// Skip timeout for Server-Sent Events (SSE) endpoints
+	if (req.headers.accept && req.headers.accept.includes("text/event-stream")) {
+		next();
+		return;
+	}
+
+	res.setTimeout(60000, () => {
+		// Only send timeout response if headers haven't been sent
+		if (!res.headersSent) {
+			console.log("Request has timed out.");
+			res.status(408).send("Request timed out. Please try again later.");
+		}
+	});
+	next();
+});
 server.use("/", router);
 
 server.listen(process.env.PORT, "127.0.0.1" || 4000, () => {
