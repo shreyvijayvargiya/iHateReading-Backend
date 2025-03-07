@@ -59,11 +59,16 @@ import {
 	generateComponent,
 	generateCustomRepo,
 	generateDependencyGraph,
+	generateDependencyGraphViaLangchain,
 	generateRoadmap,
-	generateUIVariants,
 	summarizeBlogContent,
 	updateCustomRepo,
+	generateFlashCards,
 } from "../controllers/customrepos/index.js";
+import {
+	getLemonSquezyAllProducts,
+	payViaLemonSquezy,
+} from "../controllers/payments/index.js";
 
 const router = express.Router();
 
@@ -75,9 +80,10 @@ router.get("/v1/custom-repo/login", firebaseLogin);
 // custom repo download api
 router.post("/v1/api/custom-repo/download-repo", downloadRepo);
 router.post("/v1/api/get-custom-repo-graph", generateDependencyGraph);
+router.post("/v1/api/custom-repo-graph", generateDependencyGraphViaLangchain);
 router.post("/v1/api/generateRoadmap", generateRoadmap);
 router.post("/v1/api/generate-ui-variants", generateComponent);
-router.post("/v1/api/benchmark-llm-models", benchmarkLLMModels);
+
 router.post("/v1/api/generate-custom-repo", generateCustomRepo);
 router.post("/v1/api/summarize-blog-content", summarizeBlogContent);
 router.post(
@@ -85,6 +91,11 @@ router.post(
 	convertHtmlToMarkdownAndGenerateGraph
 );
 router.post("/v1/api/update-custom-repo", updateCustomRepo);
+router.post("/v1/api/generate-flash-cards", generateFlashCards);
+
+// payment apis
+router.get("/v1/api/get-lemon-squezy-products", (req, res) => res.send("Done"));
+router.post("/v1/api/pay-via-lemon-squezy", payViaLemonSquezy);
 
 // google auth api
 router.get(

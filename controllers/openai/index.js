@@ -1,4 +1,4 @@
-import { Configuration, OpenAIApi } from "openai";
+import { OpenAI } from "openai";
 import admin from "firebase-admin";
 import { gemini15Flash, googleAI } from "@genkit-ai/googleai";
 import { genkit } from "genkit";
@@ -78,10 +78,10 @@ export const getYogaPostureImageFromUnSplash = async (req, res) => {
 	res.send(output);
 };
 
-const configuration = new Configuration({
+
+const openai = new OpenAI({
 	apiKey: process.env.OPENAI_TOKEN,
 });
-const openai = new OpenAIApi(configuration);
 
 const openaiCompletionResponse = async ({ prompt, temperature }) => {
 	const response = await openai.createCompletion({

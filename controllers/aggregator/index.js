@@ -4,15 +4,14 @@ import fs from "fs";
 import RssParser from "rss-parser";
 import { supabaseApp } from "../../utils/supabase.js";
 import { createApi } from "unsplash-js";
-import { Configuration, OpenAIApi } from "openai";
+import { OpenAI } from "openai";
 import { encode } from "base64-arraybuffer";
 import admin from "firebase-admin";
 import { getMetadataFromUrl } from "../scrap/index.js";
 
-const configuration = new Configuration({
+const openai = new OpenAI({
 	apiKey: process.env.OPENAI_TOKEN,
 });
-const openai = new OpenAIApi(configuration);
 
 const unsplashRoute = createApi({
 	accessKey: process.env.unsplash_key,

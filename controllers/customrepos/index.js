@@ -3,12 +3,14 @@ import zip from "adm-zip";
 import { DirSchema, dependencyGraphSchema } from "./schema.js";
 import crypto from "crypto";
 import {
-	getSystemPrompt,
 	getUpdateSystemPrompt,
 	getDependencySystemPrompt,
 	getRoadmapSystemPrompt,
+	getFlashCardsSystemPrompt,
+	getCustomRepoGeneratorSystemPrompt,
 } from "./systemPrompt.js";
 import { ChatOpenAI } from "@langchain/openai";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatOllama } from "@langchain/ollama";
 import { PromptTemplate } from "@langchain/core/prompts";
@@ -18,8 +20,13 @@ import { fileURLToPath } from "url";
 import { performance } from "perf_hooks";
 import { load } from "cheerio";
 import TurndownService from "turndown";
+import OpenAI from "openai";
 
-const ollamaClient = new ChatOllama({
+const { chat, completions } = new OpenAI({
+	apiKey: process.env.OPENAI_API_KEY,
+});
+
+const codeOllamaClient = new ChatOllama({
 	model: "codellama:7b",
 	temperature: 0.8,
 	baseUrl: "http://localhost:11434",
@@ -27,10 +34,15 @@ const ollamaClient = new ChatOllama({
 });
 
 const deepSeekClient = new ChatOllama({
-	model: "deepseek-r1:8b",
-	temperature: 0.8,
+	model: "deepseek-r1:1.5b",
+	temperature: 0.1,
 	baseUrl: "http://localhost:11434",
 	streaming: true,
+});
+
+const googleClient = new ChatGoogleGenerativeAI({
+	model: "gemini-1.5-flash",
+	apiKey: process.env.GOOGLE_GENAI_API_KEY,
 });
 
 const client = new ChatOpenAI({
@@ -105,15 +117,16 @@ const sendSSEData = (res, data) => {
 
 export const generateCustomRepo = async (req, res) => {
 	try {
-		const dependencyGraph = req.body.dependencyGraph;
+		const { projectName, ...dependencyGraph } = req.body;
 		const dependencyGraphHash = JSON.stringify(dependencyGraph);
 		const uniqueHash = crypto
 			.createHash("sha256")
 			.update(dependencyGraphHash)
 			.digest("hex");
-		const { isExists, repoStructure } = await checkRepositoryStatusApi(
-			dependencyGraphHash
-		);
+		const isExists = false;
+		// const { isExists, repoStructure } = await checkRepositoryStatusApi(
+		// 	dependencyGraphHash
+		// );
 
 		res.setHeader("Content-Type", "text/event-stream");
 		res.setHeader("Cache-Control", "no-cache");
@@ -125,48 +138,82 @@ export const generateCustomRepo = async (req, res) => {
 
 		sendEvent("Initializing repository generation...");
 
-		const systemPrompt = getSystemPrompt(dependencyGraph);
+		const systemPrompt = getCustomRepoGeneratorSystemPrompt(dependencyGraph);
 		const messages = [
 			new SystemMessage(systemPrompt),
-			new HumanMessage("Generate the defined repository structure"),
+			new HumanMessage(
+				`Generate the code repository structure for the dependency graph: ${JSON.stringify(
+					dependencyGraph,
+					null,
+					2
+				)}`
+			),
 		];
 		let gptResponse, inputTokens, outputTokens;
 		if (isExists) {
-			gptResponse = repoStructure;
+			// gptResponse = repoStructure;
 		} else {
-			const gptMessage = await client.invoke(messages);
-			gptResponse = gptMessage.content;
-			inputTokens = await Promise.all(
-				messages.map((msg) => client.getNumTokens(msg.content))
-			).then((tokens) => tokens.reduce((total, num) => total + num, 0));
+			let gptResponse = "";
+			let thinking = "";
 
-			outputTokens = await client.getNumTokens(gptMessage.content);
-			await admin
-				.firestore()
-				.collection("repos")
-				.doc(uniqueHash)
-				.set(
-					{
-						dependencyGraph,
-						createdAt: admin.firestore.Timestamp.now(),
-						updatedAt: admin.firestore.Timestamp.now(),
-						repoStructure: JSON.stringify(gptMessage.content),
-						totalTokens: inputTokens + outputTokens,
-					},
-					{ merge: true }
+			try {
+				for await (const chunk of await googleClient.stream(messages)) {
+					// const thinkMatch = chunk.content.match(/<think>(.*?)<\/think>/s);
+					// const thinking = thinkMatch ? thinkMatch[1] : '';
+					gptResponse += chunk.content;
+					sendEvent(chunk.content);
+				}
+				sendEvent("Repository generated successfully.");
+
+				// Calculate input tokens from the messages
+				inputTokens = await Promise.all(
+					messages.map((msg) => googleClient.getNumTokens(msg.content))
+				).then((tokens) => tokens.reduce((total, num) => total + num, 0));
+
+				// Calculate output tokens from the complete response
+				outputTokens = await googleClient.getNumTokens(gptResponse);
+
+				console.log(
+					`Input tokens: ${inputTokens}, Output tokens: ${outputTokens}`
 				);
-		}
 
-		try {
-			console.log(gptResponse, "gptResponse");
-			const validated = DirSchema.parse(gptResponse?.repoStrucure);
-			sendEvent("Repository generated successfully.");
-			res.setHeader("Content-Type", "application/zip");
-			res.setHeader("Content-Disposition", "attachment; filename=repo.zip");
-			res.end({ data: JSON.stringify(validated) });
-		} catch (validationError) {
-			sendEvent("Error during validation.");
-			throw validationError;
+				// await admin
+				// 	.firestore()
+				// 	.collection("repos")
+				// 	.doc(uniqueHash)
+				// 	.set(
+				// 		{
+				// 			dependencyGraph,
+				// 			createdAt: admin.firestore.Timestamp.now(),
+				// 			updatedAt: admin.firestore.Timestamp.now(),
+				// 			repoStructure: JSON.stringify(cleanedResponse),
+				// 			totalTokens: inputTokens + outputTokens,
+				// 		},
+				// 		{ merge: true }
+				// 	);
+
+				// Validate the cleaned JSON response
+				// const validated = DirSchema.parse(JSON.parse(cleanedResponse));
+				console.log(gptResponse, "gptResponse");
+
+				// Send final data through SSE instead of res.send()
+				sendEvent({
+					data: gptResponse,
+					inputTokens,
+					outputTokens,
+					status: "complete",
+				});
+
+				// End the response stream
+				res.end();
+			} catch (validationError) {
+				sendEvent({
+					error: "Error during validation.",
+					status: "error",
+				});
+				res.end();
+				throw validationError;
+			}
 		}
 	} catch (error) {
 		console.error("Error in generating custom repo:", error);
@@ -181,27 +228,66 @@ export const generateCustomRepo = async (req, res) => {
 
 export const generateDependencyGraph = async (req, res) => {
 	try {
-		const { userPrompt } = req.body;
+		const { userPrompt, temperature, model } = req.body;
 
-		const response = await ollamaClient.invoke([
-			new SystemMessage(getDependencySystemPrompt(userPrompt)),
-			new HumanMessage(`
-				Please provide the required output that reflects the user project details or requirements. 
-			`),
-		]);
+		const { choices } = await chat.completions.create({
+			model: model ? model : "gpt-3.5-turbo",
+			messages: [
+				{
+					role: "system",
+					content: getDependencySystemPrompt(userPrompt),
+				},
+				{
+					role: "user",
+					content:
+						"Please provide the dependency graph for the project details.",
+				},
+			],
+			max_tokens: 1000,
+			temperature: temperature || 0.8,
+		});
 
-		console.log(response.content);
+		const response = choices[0].message;
+		console.log(response.content, "choices");
 
-		res.send(response.content);
+		res.json(JSON.parse(response.content));
 	} catch (error) {
-		console.error("Child-proof error:", error);
+		console.error(error, "error in generating graph");
 		res.status(500).json({
 			error:
 				"Let's try again! Could you describe your website idea differently?",
 			examplePrompts: [
-				"I want a blog about dinosaurs",
-				"Make me a store for toy cars",
-				"Create a birthday party invitation site",
+				"Create a blog website",
+				"Simple e-commerce website",
+				"A portfolio website",
+			],
+		});
+	}
+};
+
+export const generateDependencyGraphViaLangchain = async (req, res) => {
+	try {
+		const { userPrompt, temperature, model } = req.body;
+
+		const response = await deepSeekClient.invoke([
+			new SystemMessage(getDependencySystemPrompt(userPrompt)),
+			new HumanMessage(`
+		 		Please provide the dependency graph for the project details .
+		 	`),
+		]);
+
+		console.log(response.content);
+
+		res.json(JSON.parse(response.content));
+	} catch (error) {
+		console.error(error, "error in generating graph");
+		res.status(500).json({
+			error:
+				"Let's try again! Could you describe your website idea differently?",
+			examplePrompts: [
+				"Create a blog website",
+				"Simple e-commerce website",
+				"A portfolio website",
 			],
 		});
 	}
@@ -243,8 +329,15 @@ export const generateRoadmap = async (req, res) => {
 			),
 		]);
 		for await (const chunk of stream) {
-			res.write(chunk.content);
+			sendSSEData(res, {
+				type: "chunk",
+				content: chunk.content,
+			});
 		}
+		sendSSEData(res, {
+			type: "complete",
+			roadmap: roadmap,
+		});
 		res.end();
 	} catch (error) {
 		console.error("Error generating roadmap:", error);
@@ -284,24 +377,22 @@ Rules:
 Example Output Structure:
 import React, { useState } from 'react';
 
-function ProductCard() {
-    const [isLoading, setIsLoading] = useState(true);
-
-    return (
-        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
-            {isLoading ? (
-                <div className="animate-pulse bg-gray-200 h-48" />
-            ) : (
-                <div className="space-y-4">
-                    <h2 className="text-xl font-bold">Title</h2>
-                    <p className="text-gray-600 dark:text-gray-300">Content</p>
-                </div>
-            )}
-        </div>
-    );
+const LandingPage = () => {
+	return (
+		<div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+			<Navbar />
+			<HeroSection />
+			<FeaturesSection />
+			<TestimonialsSection />
+			<PricingSection />
+			<ContactSection />
+			<Footer />
+			<Socials />
+		</div>
+	);
 }
 
-export default ProductCard;`;
+export default LandingPage;`;
 
 // Update the component prompt to be more structured
 const componentPrompt = PromptTemplate.fromTemplate(`
@@ -526,38 +617,35 @@ export const generateUIVariants = async (req, res) => {
 };
 
 // Simple system prompt for React generation
-const systemPrompt = `You are a React component generator.
-Generate clean, modern React components following these rules:
-- Use plain JavaScript (no TypeScript)
-- Use Tailwind CSS for styling
-- Use semantic HTML elements
-- Include hover and focus states
-- Add loading states where appropriate
-- Make components responsive
-- Use proper event handlers
-- Follow accessibility best practices
+const systemPrompt = `You are an expert frontend developer. Please generate a complete, production-ready React component for a landing page using Tailwind CSS. The landing page should include:
+\n
+1. A Hero Section with:
+   - A bold headline and subheadline.
+   - A call-to-action button.
+   - A background image represented by a placeholder image (using a Tailwind-styled <div> or an <img> with a placeholder URL).
 
-Example structure:
+\n
+Ensure that:
+- All images, logos, and videos are represented by placeholder elements styled using Tailwind CSS.
+- The code is written in JSX and is fully self-contained.
+- Proper spacing, formatting, and indentation are used so that the code can be directly rendered in an editor without errors.
+- The component is responsive and mobile-friendly.
+
+Return only the code for example given below \n
 import React, { useState } from 'react';
 
-function ExampleComponent() {
-    const [isLoading, setIsLoading] = useState(false);
-    
-    return (
-        <article className="p-4 bg-white rounded-lg shadow hover:shadow-lg transition-all">
-            {isLoading ? (
-                <div className="animate-pulse bg-gray-200 h-48 rounded" />
-            ) : (
-                <div className="space-y-4">
-                    <h2 className="text-xl font-bold">Title</h2>
-                    <p className="text-gray-600">Content</p>
-                </div>
-            )}
-        </article>
-    );
+const LandingPage = () => {
+	return (
+		<div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+			// Navbar component code goes here
+			// HeroSection component code goes here
+			
+		</div>
+	);
 }
 
-export default ExampleComponent;`;
+export default LandingPage;
+`;
 
 // Add a function to clean think tags and other unwanted content
 const cleanLLMOutput = (content) => {
@@ -592,11 +680,9 @@ export const generateComponent = async (req, res) => {
 			message: "Starting component generation...",
 		});
 
-		const stream = await ollamaClient.steam([
+		const stream = await ollamaClient.stream([
 			new SystemMessage(systemPrompt),
-			new HumanMessage(`Create a React component for: ${component}
-				Output ONLY the React component code.
-				NO explanations or additional text.`),
+			new HumanMessage(`Create a component for${component}`),
 		]);
 
 		let componentCode = "";
@@ -605,7 +691,7 @@ export const generateComponent = async (req, res) => {
 			if (res.finished) break;
 
 			// Extract only the code part from the chunk
-			const codePart = cleanLLMOutput(chunk.content).trim();
+			const codePart = cleanLLMOutput(chunk.content);
 			if (codePart) {
 				componentCode += codePart;
 
@@ -807,14 +893,14 @@ export const convertHtmlToMarkdownAndGenerateGraph = async (req, res) => {
 		const processStream = async () => {
 			try {
 				const reader = stream.getReader();
-				let mermaidGraph = '';
+				let mermaidGraph = "";
 
 				while (true) {
 					const { done, value } = await reader.read();
 					if (done) break;
 					mermaidGraph += value.content; // Accumulate the content
 					console.log(mermaidGraph);
-					res.write(`data: ${mermaidGraph}`)
+					res.write(`data: ${mermaidGraph}`);
 					if (res.flush) res.flush();
 				}
 
@@ -841,5 +927,52 @@ export const convertHtmlToMarkdownAndGenerateGraph = async (req, res) => {
 		res
 			.status(500)
 			.json({ error: "Failed to convert HTML to Markdown and generate graph" });
+	}
+};
+
+export const generateFlashCards = async (req, res) => {
+	try {
+		const { language } = req.body;
+
+		if (!language) {
+			return res.status(400).json({ error: "Topic is required" });
+		}
+
+		res.setHeader("Content-Type", "text/event-stream");
+		res.setHeader("Cache-Control", "no-cache");
+		res.setHeader("Connection", "keep-alive");
+
+		const stream = await deepSeekClient.stream([
+			new HumanMessage(
+				`Generate flashcards for the following topic: ${language}`
+			),
+			new SystemMessage(getFlashCardsSystemPrompt(language)),
+		]);
+
+		let flashCards = [];
+
+		for await (const chunk of stream) {
+			// Clean the output to extract only flashcard questions
+			const cleanedContent = cleanLLMOutput(chunk.content);
+			if (cleanedContent) {
+				const flashcardObject = { flashcard: cleanedContent };
+				flashCards.push(flashcardObject); // Store each flashcard as an object
+				sendSSEData(res, {
+					type: "chunk",
+					content: flashcardObject, // Send each flashcard as an object
+				});
+			}
+		}
+
+		// Send a complete message with all flashcards
+		sendSSEData(res, {
+			type: "complete",
+			flashCards: flashCards,
+		});
+
+		res.end();
+	} catch (error) {
+		console.error("Error generating flashcards:", error);
+		res.status(500).json({ error: "Failed to generate flashcards" });
 	}
 };

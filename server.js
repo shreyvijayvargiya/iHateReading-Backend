@@ -48,6 +48,7 @@ const userAgent =
 	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36";
 const Referer = "https://www.google.com";
 
+
 server.use(express.text({ type: "text/html" }));
 
 server.use((req, res, next) => {
@@ -64,6 +65,7 @@ server.use((req, res, next) => {
 	});
 	next();
 });
+
 
 server.use((req, res, next) => {
 	// Skip timeout for Server-Sent Events (SSE) endpoints

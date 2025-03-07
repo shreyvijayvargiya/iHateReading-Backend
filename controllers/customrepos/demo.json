@@ -1,82 +1,57 @@
 {
-	"name": "create-next-app",
+	"name": "repo-name",
 	"type": "directory",
 	"children": [
 		{
 			"name": "package.json",
 			"type": "file",
-			"content": {
-				"name": "create-next-app",
-				"author": "",
-				"scripts": {
-					"dev": "next dev",
-					"build": "next build",
-					"start": "next start"
-				},
-				"engines": {
-					"node": ">=14.0.0"
-				},
-				"license": "MIT",
-				"version": "1.0.0",
-				"dependencies": {
-					"next": "^14.0.0",
-					"react": "^18.2.0",
-					"react-dom": "^18.2.0"
-				}
-			}
+			"content": "{ \"name\": \"repo-name\", \"version\": \"0.1.0\", \"private\": true, \"scripts\": { \"dev\": \"next dev\", \"build\": \"next build\", \"start\": \"next start\" }, \"dependencies\": { \"next\": \"13.4.19\", \"react\": \"18.2.0\", \"react-dom\": \"18.2.0\" }, \"devDependencies\": { } }"
 		},
 		{
 			"name": ".gitignore",
 			"type": "file",
-			"content": "node_modules/\n.next/\n.env.local\n"
+			"content": "/.next\n/node_modules\n/out\n/.env*"
 		},
 		{
 			"name": "README.md",
 			"type": "file",
-			"content": "# Create Next App\n\nThis is a project generated with Next.js."
+			"content": "# repo-name"
 		},
 		{
-			"name": ".env.local",
+			"name": ".env.example",
 			"type": "file",
-			"content": "NEXT_PUBLIC_API_URL=http://localhost:3000/api\n"
+			"content": "# Add your environment variables here"
 		},
 		{
-			"name": "app",
+			"name": "pages",
 			"type": "directory",
 			"children": [
 				{
-					"name": "page.tsx",
+					"name": "_app.js",
 					"type": "file",
-					"content": "export default function Home() {\n  return (\n    <main className=\"flex min-h-screen flex-col items-center p-24\">\n      <h1>Welcome to Next.js</h1>\n    </main>\n  );\n}\n"
+					"content": "import {AppProps} from 'next/app';\n\nexport default function App({Component, pageProps}: AppProps) {\n  return <Component {...pageProps} />\n}"
 				},
 				{
-					"name": "layout.tsx",
+					"name": "_document.js",
 					"type": "file",
-					"content": "export default function RootLayout({\n  children,\n}: {\n  children: React.ReactNode\n}) {\n  return (\n    <html lang=\"en\">\n      <body>{children}</body>\n    </html>\n  );\n}\n"
+					"content": "import Document, {Html, Head, Main, NextScript} from 'next/document';\n\nexport default class MyDocument extends Document {\n  render() {\n    return (\n      <Html>\n        <Head/>\n        <body>\n          <Main/>\n          <NextScript/>\n        </body>\n      </Html>\n    );\n  }\n}"
 				},
 				{
-					"name": "api",
-					"type": "directory",
-					"children": [
-						{
-							"name": "hello",
-							"type": "directory",
-							"children": [
-								{
-									"name": "route.ts",
-									"type": "file",
-									"content": "export async function GET() {\n  return Response.json({ message: 'Hello from Next.js!' });\n}\n"
-								}
-							]
-						}
-					]
+					"name": "index.js",
+					"type": "file",
+					"content": "function HomePage() {\n  return (\n    <div>\n      <h1>Hello, Next.js!</h1>\n    </div>\n  );\n}\nexport default HomePage;"
 				}
 			]
 		},
 		{
-			"name": "next.config.js",
-			"type": "file",
-			"content": "/** @type {import('next').NextConfig} */\nconst nextConfig = {\n  reactStrictMode: true,\n  swcMinify: true,\n};\nmodule.exports = nextConfig;\n"
+			"name": "public",
+			"type": "directory",
+			"children": []
+		},
+		{
+			"name": "styles",
+			"type": "directory",
+			"children": []
 		}
 	]
 }

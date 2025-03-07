@@ -12,9 +12,11 @@
 		"server": "node server.js",
 		"dev": "nodemon --experimental-specifier-resolution=node server.js",
 		"start": "nodemon --config nodemon.json",
-		"automate": "node run automation.index.js"
+		"automate": "node run automation.index.js",
+		"test": "jest"
 	},
 	"dependencies": {
+		"@ai-sdk/openai": "^1.2.0",
 		"@browserbasehq/stagehand": "^1.9.0",
 		"@genkit-ai/googleai": "^0.9.12",
 		"@huggingface/transformers": "^3.3.3",
@@ -30,6 +32,7 @@
 		"@supabase/supabase-js": "^2.2.3",
 		"@trycourier/courier": "^3.5.0",
 		"adm-zip": "^0.5.16",
+		"ai": "^4.1.51",
 		"axios": "^0.21.1",
 		"base64-arraybuffer": "^1.0.2",
 		"body-parser": "^1.19.0",
@@ -39,7 +42,7 @@
 		"cors": "^2.8.5",
 		"csv-parser": "^3.0.0",
 		"deep-email-validator": "^0.1.21",
-		"dotenv": "^10.0.0",
+		"dotenv": "^16.4.7",
 		"ejs": "^3.1.6",
 		"express": "^4.17.1",
 		"express-handlebars": "^5.3.4",
@@ -61,7 +64,7 @@
 		"node-fetch": "^3.3.0",
 		"nodemailer": "^6.8.0",
 		"nodemon": "^2.0.12",
-		"openai": "^3.1.0",
+		"openai": "^4.85.1",
 		"passport": "^0.5.0",
 		"passport-google-oauth20": "^2.0.0",
 		"perf_hooks": "^0.0.1",
@@ -77,11 +80,12 @@
 		"shelljs": "^0.8.4",
 		"sib-api-v3-sdk": "^8.4.2",
 		"simple-git": "^2.47.0",
+		"supertest": "^7.0.0",
 		"turndown": "^7.2.0",
 		"twitter": "^1.7.1",
 		"twitter-api-v2": "^1.12.3",
 		"unsplash-js": "^7.0.18",
 		"zip-dir": "^2.0.0",
-		"zod": "^3.11.6"
+		"zod": "^3.24.2"
 	}
 }

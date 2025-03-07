@@ -67,69 +67,6 @@ export const dependencyMap = {
 				],
 			},
 		},
-		"create-react-app": {
-			instructions: `Generate a comprehensive Create React App boilerplate with the following:
-        1. Core dependencies: react, react-dom, react-scripts
-        2. Basic project structure:
-          - src/ directory with components, App.js, and index.js
-          - public/ for static assets
-        3. Essential configurations:
-          - .env for environment variables
-          - .eslintrc.json for linting (if ESLint is enabled)
-        4. Example files:
-          - src/App.js with a basic component
-          - src/index.js with ReactDOM rendering
-        5. Documentation:
-          - README.md with setup instructions
-				`,
-			sampleCode: {
-				files: [
-					{
-						path: "src/index.js",
-						content: `
-              import React from 'react';
-              import ReactDOM from 'react-dom/client';
-              import App from './App';
-              const root = ReactDOM.createRoot(document.getElementById('root'));
-              root.render(<App />);
-            `,
-					},
-					{
-						path: "src/App.js",
-						content: `
-              export default function App() {
-                return <h1>Hello from Create React App!</h1>;
-              }
-            `,
-					},
-				],
-			},
-		},
-		"vite.js": {
-			instructions:
-				"Generate a Vite (Vue 3) project with vite config file in the root directory(vite.config.js)",
-			sampleCode: {
-				files: [
-					{
-						path: "src/App.vue",
-						content: `
-              <template>
-                <h1>Welcome to Vite with Vue.js</h1>
-              </template>
-              <script>
-              export default {
-                name: "App",
-              };
-              </script>
-            `,
-					},
-					{
-						path: "vite.config.js",
-						content: "",
-					},
-				],
-			},
-		},
 	},
 	ui: {
 		antd: {
