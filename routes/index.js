@@ -179,24 +179,29 @@ router.post("/v1/api/resume-build-websites", resumeBuildingWebsite);
 
 // Drafts CRM APIs
 router.get("/v1/api/publish-schedule-task", publishScheduleDraft);
+
+// Data migration API
 router.get("/v1/api/migrate-data", async (req, res) => {
-	// write data migration code
 
-	// fetch all threads and restructure data and push into publish section
+	const snapshot = await admin.firestore().collection('CustomRepos').get();
+  const batch = admin.firestore().batch();
 
-	const thread = await await admin
-		.firestore()
-		.collection("scheduledThreads")
-		.orderBy("createdAt", "desc")
-		.limit(1)
-		.get();
+  snapshot.forEach(async(doc) => {
+    const data = doc.data();
+		
+   if (data.demoLink && data.demoLink.includes('/projects/')) {
+      const name = data.demoLink.split('/')[1];
+      const newDemoLink = `custom-components/${name}`;
+			console.log(newDemoLink, "new demo link")
+      // const docRef = await admin.firestore().collection('CustomRepos').doc(doc.id);
+      // batch.update(docRef, { demoLink: newDemoLink });
+    }
+  });
 
-	const dbRef = await admin
-		.firestore()
-		.collection("publish")
-		.add(thread.docs[0].data());
-	console.log(dbRef.id);
-	res.send("Data migration API endpoint");
+  await batch.commit();
+	res.send("Done")
+	
+	// res.send("Data migration completed");
 });
 
 export default router;
