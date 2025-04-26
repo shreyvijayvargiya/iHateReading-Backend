@@ -1,7 +1,92 @@
 import { load } from "cheerio";
 import axios from "axios";
-import RssParser from "rss-parser";
 import { chromium } from "playwright";
+import { ChatOllama } from "@langchain/ollama";
+import RSSParser from "rss-parser";
+
+// Initialize DeepSeek client
+const deepSeekClient = new ChatOllama({
+	model: "deepseek-r1:8b",
+	temperature: 0.1,
+	baseUrl: "http://localhost:11434",
+	streaming: true, // turn off streaming for simplicity
+});
+
+const llamaClient = new ChatOllama({
+	model: "gemma",
+	temperature: 0.1,
+	baseUrl: "http://localhost:11434",
+	streaming: true, // turn off streaming for simplicity
+});
+
+const codeMap = {
+	size: {
+		Small: "isz:i",
+		Medium: "isz:m",
+		Large: "isz:l",
+		"Extra large": "isz:x",
+	},
+	type: {
+		Photograph: "itp:photo",
+		Clipart: "itp:clipart",
+		Animated: "itp:animated",
+		"Line drawing": "itp:lineart",
+	},
+	color: {
+		"Full color": "ic:color",
+		"Black & white": "ic:gray",
+		Transparent: "ic:trans",
+	},
+	license: { "Creative Commons": "il:cl", Commercial: "il:ol" },
+	time: { "Past day": "qdr:d", "Past week": "qdr:w", "Past month": "qdr:m" },
+	aspect: { Tall: "iar:t", Square: "iar:s", Wide: "iar:w" },
+	format: { JPG: "ift:jpg", PNG: "ift:png", GIF: "ift:gif" },
+};
+
+export const scrapGoogleImagesApi = async (req, res) => {
+	const { query, options = {}, limit = 10 } = req.body;
+	if (!query) {
+		return res.status(400).json({ error: "query is needed" });
+	}
+
+	try {
+		const tbsParts = Object.entries(options)
+			.map(([k, v]) => codeMap[k]?.[v])
+			.filter(Boolean);
+		const tbsQuery = tbsParts.length ? `&tbs=${tbsParts.join(",")}` : "";
+
+		const browser = await chromium.launch();
+		const page = await browser.newPage();
+		await page.goto(
+			`https://www.google.com/search?q=${encodeURIComponent(
+				query
+			)}&tbm=isch${tbsQuery}`
+		);
+		await page.waitForSelector('img[src^="https"]');
+		await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+		await page.waitForTimeout(2000);
+
+		const images = await page.evaluate(
+			(max) =>
+				Array.from(document.querySelectorAll('img[src^="https"]'))
+					.map((img) => ({
+						url: img.src,
+						w: img.naturalWidth,
+						h: img.naturalHeight,
+					}))
+					.filter((i) => i.w > 100 && i.h > 100)
+					.slice(0, max)
+					.map((i) => i.url),
+			limit
+		);
+
+		await browser.close();
+		res.send(images);
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ error: "Failed to process prompt" });
+	}
+};
 
 export const scrapLink = async (req, res) => {
 	const { url } = req.body;
@@ -94,8 +179,7 @@ export const scrapRSSFeed = async (req, res) => {
 	};
 	try {
 		const { url } = req.body;
-		const parser = new RssParser();
-		const parsed = await parser.parseURL(url);
+
 		response.data = parsed;
 		response.status = 200;
 		response.success = true;
@@ -161,9 +245,4 @@ export const getMetadataFromUrl = async (url) => {
 		console.log(`Error fetching metadata for URL: ${url}`, e.message);
 		return { url, error: e.message };
 	}
-};
-
-export const searchGoogle = async (req, res) => {
-	
-	return links;
 };

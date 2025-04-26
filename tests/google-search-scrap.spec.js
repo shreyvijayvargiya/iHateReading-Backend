@@ -24,5 +24,4 @@ test("Google Search Scraper", async ({ page }) => {
 	});
   }
   console.log(links, "link")
-
 });

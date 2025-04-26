@@ -84,5 +84,10 @@ server.use((req, res, next) => {
 
 server.use("/", router);
 
-// Export the Express API
+const PORT = process.env.PORT || 4000;
+server.listen(PORT, () => {
+	console.log(`🚀 Server is running on port ${PORT}`);
+	console.log(`📝 API Documentation available at http://localhost:${PORT}`);
+});
+
 export default server;

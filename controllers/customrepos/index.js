@@ -1,5 +1,4 @@
 import admin from "firebase-admin";
-import zip from "adm-zip";
 import { DirSchema, dependencyGraphSchema } from "./schema.js";
 import crypto from "crypto";
 import {
@@ -26,15 +25,8 @@ const { chat, completions } = new OpenAI({
 	apiKey: process.env.OPENAI_API_KEY,
 });
 
-const codeOllamaClient = new ChatOllama({
-	model: "codellama:7b",
-	temperature: 0.8,
-	baseUrl: "http://localhost:11434",
-	streaming: true,
-});
-
 const deepSeekClient = new ChatOllama({
-	model: "deepseek-r1:1.5b",
+	model: "deepseek-r1:8b",
 	temperature: 0.1,
 	baseUrl: "http://localhost:11434",
 	streaming: true,
@@ -44,48 +36,6 @@ const googleClient = new ChatGoogleGenerativeAI({
 	model: "gemini-1.5-flash",
 	apiKey: process.env.GOOGLE_GENAI_API_KEY,
 });
-
-const client = new ChatOpenAI({
-	temperature: 0.9,
-	model: "gpt-4o-mini",
-	apiKey: process.env.OPENAI_API_KEY,
-});
-
-const checkRepositoryStatusApi = async (dependencyGraphHash) => {
-	try {
-		const uniqueHash = crypto
-			.createHash("sha256")
-			.update(dependencyGraphHash)
-			.digest("hex");
-		const isExists = await admin
-			.firestore()
-			.collection("repos")
-			.doc(uniqueHash)
-			.get();
-		return { isExists: isExists.exists, repoStructure: isExists.data() };
-	} catch (error) {
-		console.error("Error checking repository status:", error);
-		return false;
-	}
-};
-
-const createRepoZipApi = (repoStructure) => {
-	const zipFolder = new zip("./repo.zip");
-
-	const addFilesToZip = (dir, parentPath = "") => {
-		dir.children.forEach((child) => {
-			const currentPath = `${parentPath}${child.name}`;
-			if (child.type === "file") {
-				zipFolder.addFile(currentPath, Buffer.from(child.content));
-			} else if (child.type === "directory") {
-				addFilesToZip(child, `${currentPath}/`);
-			}
-		});
-	};
-
-	addFilesToZip(repoStructure);
-	return zipFolder.toBuffer();
-};
 
 const saveVariantToFile = async (variantCode, variantId, format) => {
 	try {
@@ -974,5 +924,175 @@ export const generateFlashCards = async (req, res) => {
 	} catch (error) {
 		console.error("Error generating flashcards:", error);
 		res.status(500).json({ error: "Failed to generate flashcards" });
+	}
+};
+
+export const generateLandingPageApi = async (req, res) => {
+	try {
+		const { prompt } = req.body;
+
+		if (!prompt) {
+			return res.status(400).json({ error: "Prompt is required" });
+		}
+
+		// Set headers for streaming response
+		res.setHeader("Content-Type", "text/event-stream");
+		res.setHeader("Cache-Control", "no-cache");
+		res.setHeader("Connection", "keep-alive");
+
+		// Send initial message
+		sendSSEData(res, {
+			type: "start",
+			message: "Starting landing page generation...",
+		});
+
+		// Create a system message for the landing page generation
+		const systemMessage = `You are an expert frontend developer. Generate a complete, production-ready React component for a landing page using Tailwind CSS. The landing page should include:
+1. A Hero Section with:
+   - A bold headline and subheadline
+   - A call-to-action button
+   - A background image or gradient
+2. A Features Section with:
+   - 3-4 key features
+   - Icons or illustrations
+3. A Testimonials Section
+4. A Contact Section
+5. A Footer
+
+Ensure that:
+- All images and icons are represented by placeholder elements styled using Tailwind CSS
+- The code is written in JSX and is fully self-contained
+- Proper spacing, formatting, and indentation are used
+- The component is responsive and mobile-friendly
+- Include dark mode support
+- Use modern React practices (hooks, functional components)
+- Include proper TypeScript types if specified`;
+
+		// Stream the response using the existing DeepSeek client
+		const stream = await deepSeekClient.stream([
+			new SystemMessage(systemMessage),
+			new HumanMessage(`Create a landing page for: ${prompt}`),
+		]);
+
+		let generatedCode = "";
+
+		for await (const chunk of stream) {
+			if (res.finished) break;
+
+			// Clean the output to extract only the code
+			const cleanedContent = cleanLLMOutput(chunk.content);
+			if (cleanedContent) {
+				generatedCode += cleanedContent;
+				sendSSEData(res, {
+					type: "chunk",
+					content: cleanedContent,
+				});
+			}
+		}
+
+		// Send completion message
+		sendSSEData(res, {
+			type: "complete",
+			code: generatedCode,
+		});
+
+		res.end();
+	} catch (error) {
+		console.error("Error generating landing page:", error);
+		if (!res.finished) {
+			sendSSEData(res, {
+				type: "error",
+				error: "Failed to generate landing page",
+				message: error.message,
+			});
+			res.end();
+		}
+	}
+};
+
+export const updateShuffleApi = async (req, res) => {
+	try {
+		const { code } = req.body;
+
+		if (!code) {
+			return res.status(400).json({ error: "code is required" });
+		}
+
+		// Set headers for streaming response
+		res.setHeader("Content-Type", "text/event-stream");
+		res.setHeader("Cache-Control", "no-cache");
+		res.setHeader("Connection", "keep-alive");
+
+		// Send initial message
+		sendSSEData(res, {
+			type: "start",
+			message: "Starting theme shuffle...",
+		});
+
+		// System message for theme modification
+		const systemMessage = `You are an expert frontend developer specialized in theme design. Your task is to update the visual theme, colors, and styles of an existing React component using Tailwind CSS WITHOUT changing its structure or functionality. Preserve all components, layout, and logic. Only modify Tailwind classes to:
+			1. Change color schemes (primary, secondary, accent colors)
+			2. Update gradients and background styles
+			3. Adjust text styles (font weights, sizes where appropriate)
+			4. Modify spacing and decorative elements
+			5. Enhance dark mode support
+			6. Improve visual hierarchy through color contrast
+			7. Update hover/focus states styling
+			Keep all JSX structure intact. Use modern Tailwind features and ensure responsive design. Output ONLY the modified code with no explanations.`;
+
+		// Stream the response using the DeepSeek client
+		const stream = await deepSeekClient.stream([
+			new SystemMessage(systemMessage),
+			new HumanMessage(
+				`Update the theme and styling of this React component: ${code}`
+			),
+		]);
+
+		let modifiedCode = "";
+		let isCodeBlock = false;
+
+		for await (const chunk of stream) {
+			if (res.finished) break;
+
+			const cleanedContent = cleanLLMOutput(chunk.content);
+
+			if (cleanedContent) {
+				// Detect code block boundaries
+				if (cleanedContent.includes("```")) {
+					if (isCodeBlock) {
+						isCodeBlock = false;
+						continue;
+					}
+					isCodeBlock = true;
+					continue;
+				}
+
+				if (isCodeBlock) {
+					modifiedCode += cleanedContent;
+					sendSSEData(res, {
+						type: "chunk",
+						content: cleanedContent,
+					});
+				}
+			}
+		}
+
+		// Send completion message
+		sendSSEData(res, {
+			type: "complete",
+			code: modifiedCode,
+		});
+
+		res.end();
+	} catch (error) {
+		console.error("Error shuffling theme:", error);
+		if (!res.finished) {
+			sendSSEData(res, {
+				type: "error",
+				error: "Failed to shuffle theme",
+				message: error.message,
+			});
+			res.end();
+		}
 	}
 };

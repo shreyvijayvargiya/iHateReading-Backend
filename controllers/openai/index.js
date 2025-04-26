@@ -253,23 +253,6 @@ export const aiGenKit = async (req, res) => {
 	}
 };
 
-export const answerGenAiApi = async (req, res) => {
-	try {
-		const { question } = req.body;
-		const { text } = await ai.generate({
-			prompt: `Answer the question ${question}`,
-			system:
-				"You are a software developer expert with more than 5 years of experience and have expertise in frontend/full-stack development.",
-			config: {
-				maxOutputTokens: 4000,
-			},
-		});
-		res.send(text);
-	} catch (e) {
-		console.log(e, "error");
-		res.send("Error");
-	}
-};
 
 const extractLinks = (html) => {
 	const $ = load(html);

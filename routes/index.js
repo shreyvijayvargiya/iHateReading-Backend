@@ -7,7 +7,7 @@ import {
 	scrapMetaTags,
 	scrapLink,
 	scrapRSSFeed,
-	searchGoogle,
+	scrapGoogleImagesApi,
 } from "../controllers/scrap/index.js";
 import {
 	sendTestingEmail,
@@ -24,7 +24,6 @@ import {
 	latestTemplates,
 } from "../controllers/templates/index.js";
 import {
-	answerGenAiApi,
 	createRepo,
 	getAllYogaAsanas,
 	getAllYogaPoses,
@@ -64,6 +63,8 @@ import {
 	summarizeBlogContent,
 	updateCustomRepo,
 	generateFlashCards,
+	generateLandingPageApi,
+	updateShuffleApi,
 } from "../controllers/customrepos/index.js";
 import {
 	getLemonSquezyAllProducts,
@@ -153,8 +154,6 @@ router.post("/v1/api/getSingleThreadTweet", getSingleThreadTweet);
 router.get("/v1/api/getIndianCuisines", getIndianCuisine);
 router.get("/v1/api/getCuisineImage", getImageFromOpenAI);
 
-router.get("/v1/api/scrap-google-search", searchGoogle);
-router.get("/v1/api/answerGenkitAi", answerGenAiApi);
 router.get(
 	"/v1/api/getUniqueLinksFromNewsletters",
 	getUniqueLinksFromNewsletters
@@ -182,26 +181,29 @@ router.get("/v1/api/publish-schedule-task", publishScheduleDraft);
 
 // Data migration API
 router.get("/v1/api/migrate-data", async (req, res) => {
+	const snapshot = await admin.firestore().collection("CustomRepos").get();
+	const batch = admin.firestore().batch();
 
-	const snapshot = await admin.firestore().collection('CustomRepos').get();
-  const batch = admin.firestore().batch();
+	snapshot.forEach(async (doc) => {
+		const data = doc.data();
 
-  snapshot.forEach(async(doc) => {
-    const data = doc.data();
-		
-   if (data.demoLink && data.demoLink.includes('/projects/')) {
-      const name = data.demoLink.split('/')[1];
-      const newDemoLink = `custom-components/${name}`;
-			console.log(newDemoLink, "new demo link")
-      // const docRef = await admin.firestore().collection('CustomRepos').doc(doc.id);
-      // batch.update(docRef, { demoLink: newDemoLink });
-    }
-  });
+		if (data.demoLink && data.demoLink.includes("/projects/")) {
+			const name = data.demoLink.split("/")[1];
+			const newDemoLink = `custom-components/${name}`;
+			console.log(newDemoLink, "new demo link");
+			// const docRef = await admin.firestore().collection('CustomRepos').doc(doc.id);
+			// batch.update(docRef, { demoLink: newDemoLink });
+		}
+	});
 
-  await batch.commit();
-	res.send("Done")
-	
+	await batch.commit();
+	res.send("Done");
+
 	// res.send("Data migration completed");
 });
 
+// Landing page generation API
+router.post("/v1/api/generate-landing-page", generateLandingPageApi);
+router.post("/v1/api/shuffle-theme", updateShuffleApi);
+router.post("/v1/api/scrap-google-images", scrapGoogleImagesApi);
 export default router;
