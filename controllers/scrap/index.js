@@ -1,8 +1,8 @@
 import { load } from "cheerio";
 import axios from "axios";
 import { chromium } from "playwright";
-import { ChatOllama } from "@langchain/ollama";
-import RSSParser from "rss-parser";
+import { ChatOllama, Ollama } from "@langchain/ollama";
+import { parseStringPromise } from "xml2js";
 
 // Initialize DeepSeek client
 const deepSeekClient = new ChatOllama({
@@ -12,7 +12,7 @@ const deepSeekClient = new ChatOllama({
 	streaming: true, // turn off streaming for simplicity
 });
 
-const llamaClient = new ChatOllama({
+const llamaClient = new Ollama({
 	model: "gemma",
 	temperature: 0.1,
 	baseUrl: "http://localhost:11434",
@@ -170,24 +170,82 @@ export const scrapMetaTags = async (req, res) => {
 	}
 };
 
-export const scrapRSSFeed = async (req, res) => {
-	let response = {
-		success: false,
-		status: null,
-		data: null,
-		error: null,
+const extractMeta = (html) => {
+	const $ = load(html);
+	return {
+		title:
+			$('meta[property="og:title"]').attr("content") ||
+			$('meta[name="title"]').attr("content") ||
+			$("title").text() ||
+			null,
+		description:
+			$('meta[property="og:description"]').attr("content") ||
+			$('meta[name="description"]').attr("content") ||
+			null,
+		image:
+			$('meta[property="og:image"]').attr("content") ||
+			$('meta[name="twitter:image"]').attr("content") ||
+			null,
+		url: $('meta[property="og:url"]').attr("content") || null,
+		siteName: $('meta[property="og:site_name"]').attr("content") || null,
 	};
-	try {
-		const { url } = req.body;
+};
 
-		response.data = parsed;
-		response.status = 200;
-		response.success = true;
-		res.send(response);
-	} catch (e) {
-		console.log(e, "error");
-		response.error = e;
-		res.send(response);
+export const scrapRSSFeed = async (req, res) => {
+	const { feedUrl } = req.body;
+	if (!feedUrl) {
+		return res.status(400).json({ error: "Missing feedUrl in request body" });
+	}
+
+	try {
+		// 1. Fetch RSS XML as raw text
+		const rssResponse = await axios.get(feedUrl, {
+			responseType: "text",
+			timeout: 5000,
+		});
+		const xml = rssResponse.data;
+
+		// 2. Parse XML into JS object
+		const rssObj = await parseStringPromise(xml, { trim: true });
+		const items = rssObj.rss?.channel?.[0]?.item || [];
+
+		// 3. Process each <item>
+		const results = await Promise.all(
+			items.map(async (item) => {
+				const link = item.link?.[0] || null;
+				const title = item.title?.[0] || null;
+				const pubDate = item.pubDate?.[0] || null;
+
+				if (!link) {
+					return { title, link, pubDate, meta: { error: "No link found" } };
+				}
+
+				try {
+					const pageResp = await axios.get(link, { timeout: 5000 });
+					const meta = extractMeta(pageResp.data);
+					return { title, link, pubDate, meta };
+				} catch (err) {
+					return {
+						title,
+						link,
+						pubDate,
+						meta: { error: "Failed to fetch page" },
+					};
+				}
+			})
+		);
+
+		// 4. Return the aggregated JSON
+		res.status(200).json({
+			feed: {
+				title: rssObj.rss?.channel?.[0]?.title?.[0] || null,
+				description: rssObj.rss?.channel?.[0]?.description?.[0] || null,
+			},
+			items: results,
+		});
+	} catch (err) {
+		console.error("Error processing feed:", err);
+		res.status(500).json({ error: "Failed to fetch or parse RSS feed" });
 	}
 };
 
