@@ -5,7 +5,6 @@ import { firebaseLogin } from "../controllers/login/firebaseLogin.js";
 import { downloadRepo } from "../controllers/repo/downloadRepo.js";
 import {
 	scrapMetaTags,
-	scrapLink,
 	scrapRSSFeed,
 	scrapGoogleImagesApi,
 } from "../controllers/scrap/index.js";
@@ -116,7 +115,6 @@ router.get(
 );
 
 // scrap link or website routes
-router.post("/v1/api/get-link-tags", scrapLink);
 router.post("/v1/api/get-meta-tags", scrapMetaTags);
 router.post("/v1/api/scrap-rss-feed", scrapRSSFeed);
 

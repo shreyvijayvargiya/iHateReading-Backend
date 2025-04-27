@@ -7,7 +7,6 @@ import { createApi } from "unsplash-js";
 import { OpenAI } from "openai";
 import { encode } from "base64-arraybuffer";
 import admin from "firebase-admin";
-import { getMetadataFromUrl } from "../scrap/index.js";
 
 const openai = new OpenAI({
 	apiKey: process.env.OPENAI_TOKEN,
