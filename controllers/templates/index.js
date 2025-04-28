@@ -22,7 +22,7 @@ export const addGumroadTemplate = async (req, res) => {
 		thumbnail: item.thumbnail_url,
 		link: item.short_url,
 	};
-	await admin.firestore().collection("templates").add(template);
+	await admin.firestore().collection("mini-saas").add(template);
 	res.send({ status: "success", message: "Added" });
 };
 
@@ -37,7 +37,7 @@ export const latestTemplates = async (req, res) => {
 		ids.push(item.id);
 	});
 	const firebaseIds = [];
-	(await admin.firestore().collection("templates").get()).docs?.map((item) => {
+	(await admin.firestore().collection("mini-saas").get()).docs?.map((item) => {
 		firebaseIds.push(item.data().id);
 	});
 	const remainingIds = ids.filter((item) => !firebaseIds.includes(item));

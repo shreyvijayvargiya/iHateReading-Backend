@@ -1,8 +1,6 @@
 import express from "express";
 import passport from "passport";
 import admin from "firebase-admin";
-import { firebaseLogin } from "../controllers/login/firebaseLogin.js";
-import { downloadRepo } from "../controllers/repo/downloadRepo.js";
 import {
 	scrapMetaTags,
 	scrapRSSFeed,
@@ -45,14 +43,7 @@ import {
 	getJobsPortals,
 } from "../controllers/aggregator/index.js";
 import { resumeBuildingWebsite } from "../controllers/findjobsportals/index.js";
-import { publishScheduleDraft } from "../controllers/medium/index.js";
 import {
-	createNotionTableApi,
-	getNotionDatabaseIds,
-} from "../controllers/notion/index.js";
-import { createBasicStarterRepo } from "../controllers/langchain/index.js";
-import {
-	benchmarkLLMModels,
 	convertHtmlToMarkdownAndGenerateGraph,
 	generateComponent,
 	generateCustomRepo,
@@ -65,20 +56,14 @@ import {
 	generateLandingPageApi,
 	updateShuffleApi,
 } from "../controllers/customrepos/index.js";
-import {
-	getLemonSquezyAllProducts,
-	payViaLemonSquezy,
-} from "../controllers/payments/index.js";
+import { payViaLemonSquezy } from "../controllers/payments/index.js";
 
 const router = express.Router();
 
 router.get("/", (req, res) => {
 	res.send("Welcome to basic ihatereading-backend repository ");
 });
-router.get("/v1/custom-repo/login", firebaseLogin);
 
-// custom repo download api
-router.post("/v1/api/custom-repo/download-repo", downloadRepo);
 router.post("/v1/api/get-custom-repo-graph", generateDependencyGraph);
 router.post("/v1/api/custom-repo-graph", generateDependencyGraphViaLangchain);
 router.post("/v1/api/generateRoadmap", generateRoadmap);
@@ -117,6 +102,7 @@ router.get(
 // scrap link or website routes
 router.post("/v1/api/get-meta-tags", scrapMetaTags);
 router.post("/v1/api/scrap-rss-feed", scrapRSSFeed);
+router.post("/v1/api/scrap-google-images", scrapGoogleImagesApi);
 
 // gumroad API routes
 router.get("/v1/api/gumroad/addTemplate", addGumroadTemplate);
@@ -157,7 +143,6 @@ router.get(
 	getUniqueLinksFromNewsletters
 );
 router.post("/v1/api/createRepo", createRepo);
-router.post("/v1/api/createBasicStarterRepo", createBasicStarterRepo);
 
 // aggregator APIs
 router.post("/v1/api/getNewsFeeds", getNewsFeeds);
@@ -168,14 +153,9 @@ router.post(
 	checkNewsWebsiteAndAddInSupabase
 );
 router.get("/v1/api/getJobPortals", getJobsPortals);
-router.post("/v1/api/firebase-to-notion", createNotionTableApi);
-router.get("/v1/api/getNotionDatabaseIds", getNotionDatabaseIds);
 
 // find jobs portals APIs
 router.post("/v1/api/resume-build-websites", resumeBuildingWebsite);
-
-// Drafts CRM APIs
-router.get("/v1/api/publish-schedule-task", publishScheduleDraft);
 
 // Data migration API
 router.get("/v1/api/migrate-data", async (req, res) => {
@@ -203,5 +183,5 @@ router.get("/v1/api/migrate-data", async (req, res) => {
 // Landing page generation API
 router.post("/v1/api/generate-landing-page", generateLandingPageApi);
 router.post("/v1/api/shuffle-theme", updateShuffleApi);
-router.post("/v1/api/scrap-google-images", scrapGoogleImagesApi);
+
 export default router;
