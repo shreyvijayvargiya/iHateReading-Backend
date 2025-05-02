@@ -77,7 +77,7 @@ export const scrapGoogleImagesApi = async (req, res) => {
 					}))
 					.filter((i) => i.w > 100 && i.h > 100)
 					.slice(0, max)
-					.map((i) => i),
+					.map((i) => i.url),
 			limit
 		);
 
