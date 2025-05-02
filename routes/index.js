@@ -5,6 +5,7 @@ import {
 	scrapMetaTags,
 	scrapRSSFeed,
 	scrapGoogleImagesApi,
+	scrapGoogleMapsLocation,
 } from "../controllers/scrap/index.js";
 import {
 	sendTestingEmail,
@@ -103,6 +104,7 @@ router.get(
 router.post("/v1/api/get-meta-tags", scrapMetaTags);
 router.post("/v1/api/scrap-rss-feed", scrapRSSFeed);
 router.post("/v1/api/scrap-google-images", scrapGoogleImagesApi);
+router.post("/v1/api/scrap-google-maps", scrapGoogleMapsLocation);
 
 // gumroad API routes
 router.get("/v1/api/gumroad/addTemplate", addGumroadTemplate);

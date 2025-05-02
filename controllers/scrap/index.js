@@ -73,7 +73,7 @@ export const scrapGoogleImagesApi = async (req, res) => {
 						url: img.src,
 						w: img.naturalWidth,
 						h: img.naturalHeight,
-						...img
+						...img,
 					}))
 					.filter((i) => i.w > 100 && i.h > 100)
 					.slice(0, max)
@@ -86,6 +86,84 @@ export const scrapGoogleImagesApi = async (req, res) => {
 	} catch (err) {
 		console.error(err);
 		res.status(500).json({ error: "Failed to process prompt" });
+	}
+};
+
+export const scrapGoogleMapsLocation = async (req, res) => {
+	const { query } = req.body;
+
+	if (!query) {
+		return res.status(400).json({ error: "Query parameter is required" });
+	}
+
+	try {
+		const browser = await chromium.launch();
+		const page = await browser.newPage();
+
+		// Navigate to Google Maps
+		await page.goto(
+			`https://www.google.com/maps/search/${encodeURIComponent(query)}`
+		);
+
+		// Wait for the map to load
+		await page.waitForSelector('div[role="main"]');
+
+		// Wait a bit for the location to be fully loaded
+		await page.waitForTimeout(2000);
+
+		// Extract location data
+		const locationData = await page.evaluate(() => {
+			// Get the URL which contains coordinates
+			const url = window.location.href;
+
+			// Extract coordinates from URL if present
+			const coordsMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+
+			// Get the location name
+			const locationName = document.querySelector("h1")?.textContent || "";
+
+			// Get the address if available
+			const address =
+				document.querySelector('button[data-item-id="address"]')?.textContent ||
+				"";
+
+			// Get additional details
+			const details = Array.from(
+				document.querySelectorAll('div[role="article"]')
+			)
+				.map((el) => el.textContent)
+				.filter((text) => text.trim());
+
+			return {
+				name: locationName,
+				address: address,
+				coordinates: coordsMatch
+					? {
+							lat: parseFloat(coordsMatch[1]),
+							lng: parseFloat(coordsMatch[2]),
+					  }
+					: null,
+				url: url,
+				details: details,
+			};
+		});
+
+		await browser.close();
+
+		if (!locationData.coordinates) {
+			return res.status(404).json({
+				error: "Location not found or coordinates not available",
+				data: locationData,
+			});
+		}
+
+		res.status(200).json(locationData);
+	} catch (error) {
+		console.error("Error scraping Google Maps:", error);
+		res.status(500).json({
+			error: "Failed to fetch location data",
+			details: error.message,
+		});
 	}
 };
 
