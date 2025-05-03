@@ -7,6 +7,9 @@ import {
 	scrapGoogleImagesApi,
 	scrapGoogleMapsLocation,
 	scrapAirbnbListings,
+	getUnsplashImages,
+	getGoogleMapsLocations,
+	getSerpLocations,
 } from "../controllers/scrap/index.js";
 import {
 	sendTestingEmail,
@@ -107,6 +110,9 @@ router.post("/v1/api/scrap-rss-feed", scrapRSSFeed);
 router.post("/v1/api/scrap-google-images", scrapGoogleImagesApi);
 router.post("/v1/api/scrap-google-maps", scrapGoogleMapsLocation);
 router.post("/v1/api/scrap-airbnb-listings", scrapAirbnbListings);
+router.post("/v1/api/get-unsplash-images", getUnsplashImages);
+router.post("/v1/api/get-google-maps-locations", getGoogleMapsLocations);
+router.post("/v1/api/get-serp-locations", getSerpLocations);
 
 // gumroad API routes
 router.get("/v1/api/gumroad/addTemplate", addGumroadTemplate);
