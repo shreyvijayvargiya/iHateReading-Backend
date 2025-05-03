@@ -277,3 +277,102 @@ export const scrapRSSFeed = async (req, res) => {
 		res.status(500).json({ error: "Failed to fetch or parse RSS feed" });
 	}
 };
+
+export const scrapAirbnbListings = async (req, res) => {
+	const { query, limit = 5 } = req.body;
+	if (!query) {
+		return res.status(400).json({ error: "query is needed" });
+	}
+
+	try {
+		const browser = await chromium.launch();
+		const page = await browser.newPage();
+
+		// Navigate directly to Airbnb search
+		await page.goto(
+			`https://www.airbnb.com/s/${encodeURIComponent(query)}/homes`
+		);
+
+		// Wait for listings to load
+		await page.waitForSelector('[data-testid="card-container"]');
+		await page.waitForTimeout(2000);
+
+		// Extract Airbnb listings
+		const listings = await page.evaluate((max) => {
+			const cards = Array.from(
+				document.querySelectorAll('[data-testid="card-container"]')
+			);
+			return cards
+				.map((card) => {
+					const link = card.querySelector("a");
+					const title = card.querySelector(
+						'[data-testid="listing-card-title"]'
+					)?.textContent;
+
+					// Get the main image from the picture element
+					const picture = card.querySelector("picture");
+					const image =
+						picture?.querySelector("img")?.src ||
+						card.querySelector('img[data-testid="image"]')?.src;
+
+					// Get price from the price element
+					const priceElement = card.querySelector(
+						'[data-testid="listing-card-price"]'
+					);
+					const price = priceElement?.textContent?.trim() || "";
+
+					// Get rating from the rating element
+					const ratingElement = card.querySelector(
+						'[data-testid="listing-card-rating"]'
+					);
+					const rating = ratingElement?.textContent?.trim() || "";
+
+					// Get location from the location element
+					const locationElement = card.querySelector(
+						'[data-testid="listing-card-location"]'
+					);
+					const location = locationElement?.textContent?.trim() || "";
+
+					// Get host info
+					const hostElement = card.querySelector(
+						'[data-testid="listing-card-host"]'
+					);
+					const host = hostElement?.textContent?.trim() || "";
+
+					// Get room type
+					const roomTypeElement = card.querySelector(
+						'[data-testid="listing-card-room-type"]'
+					);
+					const roomType = roomTypeElement?.textContent?.trim() || "";
+
+					if (link && link.href) {
+						return {
+							url: link.href,
+							title: title || "",
+							price: price,
+							rating: rating,
+							location: location,
+							image: image || "",
+							host: host,
+							roomType: roomType,
+						};
+					}
+					return null;
+				})
+				.filter(Boolean)
+				.slice(0, max);
+		}, limit);
+
+		await browser.close();
+
+		// Return the listings
+		res.send(listings);
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({
+			status: 500,
+			error: "Failed to fetch Airbnb listings",
+			message: err.message,
+		});
+	}
+};

@@ -6,6 +6,7 @@ import {
 	scrapRSSFeed,
 	scrapGoogleImagesApi,
 	scrapGoogleMapsLocation,
+	scrapAirbnbListings,
 } from "../controllers/scrap/index.js";
 import {
 	sendTestingEmail,
@@ -105,6 +106,7 @@ router.post("/v1/api/get-meta-tags", scrapMetaTags);
 router.post("/v1/api/scrap-rss-feed", scrapRSSFeed);
 router.post("/v1/api/scrap-google-images", scrapGoogleImagesApi);
 router.post("/v1/api/scrap-google-maps", scrapGoogleMapsLocation);
+router.post("/v1/api/scrap-airbnb-listings", scrapAirbnbListings);
 
 // gumroad API routes
 router.get("/v1/api/gumroad/addTemplate", addGumroadTemplate);
