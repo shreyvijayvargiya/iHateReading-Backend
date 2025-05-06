@@ -55,25 +55,53 @@ export const scrapGoogleImagesApi = async (req, res) => {
 			.json({ error: "At least one valid query is needed" });
 	}
 
+	let browser;
 	try {
 		const tbsParts = Object.entries(options)
 			.map(([k, v]) => codeMap[k]?.[v])
 			.filter(Boolean);
 		const tbsQuery = tbsParts.length ? `&tbs=${tbsParts.join(",")}` : "";
 
-		// Launch single browser instance
-		const browser = await chromium.launch();
-		const page = await browser.newPage();
+		// Launch browser with proper configuration
+		browser = await chromium.launch({
+			headless: true,
+			userAgent:
+				"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+			args: [
+				"--no-sandbox",
+				"--disable-setuid-sandbox",
+				"--disable-dev-shm-usage",
+				"--disable-accelerated-2d-canvas",
+				"--no-first-run",
+				"--no-zygote",
+				"--single-process",
+				"--disable-gpu",
+			],
+		});
 
-		try {
-			// Process queries sequentially
-			const results = [];
-			for (const query of queryArray) {
+		// Create a shared context for all queries
+		const context = await browser.newContext();
+
+		// Block unnecessary resources
+		await context.route("**/*", (route) => {
+			const type = route.request().resourceType();
+			return ["font", "stylesheet"].includes(type)
+				? route.abort()
+				: route.continue();
+		});
+
+		// Process all queries in parallel using Promise.all
+		const results = await Promise.all(
+			queryArray.map(async (query) => {
+				const page = await context.newPage();
 				try {
 					await page.goto(
 						`https://www.google.com/search?q=${encodeURIComponent(
 							query
-						)}&tbm=isch${tbsQuery}`
+						)}&tbm=isch${tbsQuery}`,
+						{
+							waitUntil: "networkidle",
+						}
 					);
 					await page.waitForSelector('img[src^="https"]');
 					await page.evaluate(() =>
@@ -96,32 +124,47 @@ export const scrapGoogleImagesApi = async (req, res) => {
 						limit
 					);
 
-					results.push({ query, images });
+					return { query, images };
 				} catch (error) {
-					results.push({
+					console.error(`Error processing query "${query}":`, error);
+					return {
 						query,
 						images: [],
-					});
+						error: error.message,
+					};
+				} finally {
+					await page.close();
 				}
-			}
+			})
+		);
 
-			// If single query was provided, return just the images array
-			if (!Array.isArray(queries)) {
-				const result = results[0];
-				if (!result.success) {
-					return res.status(500).json({ error: result.error });
-				}
-				return res.send(result.images);
-			}
+		// Close the shared context after all queries are complete
+		await context.close();
 
-			// For multiple queries, return array of results
-			res.send(results);
-		} finally {
+		// If single query was provided, return just the images array
+		if (!Array.isArray(queries)) {
+			const result = results[0];
+			if (!result.images.length) {
+				return res.status(404).json({
+					error: "No images found",
+					data: result,
+				});
+			}
+			return res.status(200).json(result.images);
+		}
+
+		// For multiple queries, return array of results
+		res.status(200).json(results);
+	} catch (error) {
+		console.error("Error scraping Google Images:", error);
+		res.status(500).json({
+			error: "Failed to fetch images",
+			details: error.message,
+		});
+	} finally {
+		if (browser) {
 			await browser.close();
 		}
-	} catch (err) {
-		console.error(err);
-		res.status(500).json({ error: "Failed to process prompts" });
 	}
 };
 
@@ -162,13 +205,7 @@ export const scrapGoogleMapsLocation = async (req, res) => {
 		});
 
 		// Create a shared context for all queries
-		const context = await browser.newContext({
-			proxy: {
-				server: `http://${proxy.host}:${proxy.port}`,
-				username: proxy.auth.username,
-				password: proxy.auth.password,
-			},
-		});
+		const context = await browser.newContext();
 
 		// Block unnecessary resources
 		await context.route("**/*", (route) => {
