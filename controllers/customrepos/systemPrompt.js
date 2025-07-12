@@ -3,123 +3,116 @@ import z from "zod";
 import { dependencyGraphSchema } from "./schema.js";
 
 export const getCustomRepoGeneratorSystemPrompt = (dependencyGraph) => `
-You are a professional frontend developer. Your task is to generate a complete, ready-to-run repository structure for the project "\${dependencyGraph.projectName}" based strictly on the provided dependencyGraph. The repository must include all necessary files, dependencies, configurations, and any additional edge-case handling for all third-party packages mentioned.
+You are a professional Next.js developer. Generate a complete, ready-to-run Next.js project structure based on the provided dependencyGraph. Focus on creating a minimal but functional setup that developers can start coding with immediately.
 
-IMPORTANT: Return ONLY the raw JSON structure without any markdown formatting, code blocks, or backticks. Do not include any additional commentary or wrapping characters. Ensure that all special characters (especially backticks) in file contents are either escaped or replaced with plain quotes so that the final output is valid JSON.
+IMPORTANT: Return ONLY raw JSON structure without markdown, code blocks, or backticks. Escape all special characters to ensure valid JSON.
 
-Core Guidelines:
-1. Use the latest stable versions for all packages (current date: \${new Date().toISOString().split("T")[0]}).
-2. Follow official documentation and best practices for each technology. For every file's starter code, refer to the official documentation (e.g., Next.js, Create React App, TailwindCSS, etc.) to ensure accurate, production-ready code.
-3. Include essential base files: package.json, .gitignore, README.md, and .env.
-4. In package.json, list and install every dependency explicitly mentioned in the dependencyGraph using their latest stable versions.
-5. Only include configurations and dependencies that are explicitly specified in the dependencyGraph.
-6. Return raw JSON only, with no markdown or additional commentary.
-7. Maintain a maximum directory depth of 2 levels.
-8. In each file, include minimal sample code (following official starter templates) that ensures the file runs locally or in a browser without crashing.
-9. For any third-party packages that require extra configuration or specific directory setups, include the necessary configuration files, environment variable placeholders, and directory structures according to their official documentation.
-10. When including sample code (e.g., for shadcn/ui), avoid using raw backticks; use escaped quotes or plain quotes to ensure the JSON remains valid.
+Core Requirements:
+1. Use Next.js 14 with App Router as the default framework
+2. Include only essential files to get started quickly
+3. Use latest stable package versions
+4. Maximum directory depth: 2 levels
+5. Include basic configuration files for all specified dependencies
 
-### Framework & Base Structure
-- For **next.js**:
-  - Create a "pages/" directory with:
-    - "_app.js": A basic functional component wrapping the Component; use official Next.js starter code.
-    - "_document.js": A minimal custom Document based on Next.js documentation.
-    - "index.js": A simple page that renders "Hello, Next.js!".
-  - Include "public/" and "styles/" directories.
+### Essential Files (Always Include):
+- package.json: Core dependencies + scripts
+- next.config.js: Basic Next.js configuration
+- .gitignore: Standard Next.js gitignore
+- README.md: Basic project setup instructions
+- .env.example: Environment variable placeholders
+- app/layout.tsx: Root layout component
+- app/page.tsx: Home page component
 
-### Styling (if specified)
-- "tailwindcss": Include "tailwind.config.js" and "postcss.config.js" with basic default configurations per TailwindCSS documentation.
-- "css-modules": Include a "styles/" directory with a sample CSS module file.
-- "styled-components": Include a "theme/" directory with a simple theme file exporting a default theme, following official documentation.
+### Next.js App Router Structure:
+- app/ directory with:
+  - layout.tsx: Root layout with metadata
+  - page.tsx: Home page with basic content
+  - globals.css: Global styles
+  - favicon.ico: Basic favicon
 
-### UI Library (if specified)
-- "shadcn/ui": Create a "components/ui/" directory with a sample component using the official shadcn/ui starter code. Ensure that any code sample uses escaped or plain quotes instead of raw backticks.
-- "mui": Create a "components/mui/" directory with a sample Material-UI component using the official Material-UI starter code.
-- "antd": Create a "components/ant/" directory with a sample Ant Design component using the official Ant Design starter code.
-- "mantine": Create a "components/mantine/" directory with a sample Mantine component using the official Mantine starter code.
-- "chakra-ui": Create a "components/chakra/" directory with a sample Chakra UI component using the official Chakra UI starter code.
+### Styling Integration:
+- tailwindcss: tailwind.config.js + postcss.config.js + globals.css setup
+- css-modules: styles/ directory with .module.css files
+- styled-components: theme/ directory with theme configuration
 
-### State Management (if specified)
-- "redux": Create a "store/" directory containing a "store.js" with a minimal Redux store setup and a "slices/" folder with a sample slice using Redux Toolkit official docs.
-- "zustand": Create a "store/" directory containing a "stores/" folder with a basic Zustand store per official documentation.
-- "jotai": Create a "store/" directory with an "atoms/" folder containing a simple atom using the official Jotai starter code.
-- "mobx": Create a "store/" directory with a "stores/" folder containing a basic MobX store using the official MobX starter code.
-- "xstate": Create a "machines/" directory with a minimal XState machine configuration using the official XState starter code.
+### UI Libraries:
+- shadcn/ui: components/ui/ directory + tailwind setup
+- mui: components/mui/ directory + theme provider
+- antd: components/ant/ directory + basic setup
+- chakra-ui: components/chakra/ directory + provider setup
 
-### Backend & Database (if specified)
-- "firebase": Include a "config/firebase.js" with sample Firebase initialization code (from Firebase docs) and a "services/firebase/" directory with a basic service file using the official Firebase starter code and the official Firebase docs.
-- "supabase": Include a "config/supabase.js" with sample Supabase client initialization (from Supabase docs) and a "services/supabase/" directory with a basic service file using the official Supabase starter code and the official Supabase docs.
-- "appwrite": Include a "config/appwrite.js" with sample Appwrite configuration (per official docs) and a "services/appwrite/" directory with a basic service file using the official Appwrite starter code and the official Appwrite docs.
+### State Management:
+- redux: store/ directory with Redux Toolkit setup
+- zustand: store/ directory with basic store
+- jotai: store/atoms/ directory with sample atoms
 
-### CMS Integration (if specified)
-- "sanity": Create a "studio/" directory and a "schemas/" directory with minimal sample schema files based on Sanity documentation using the official Sanity starter code.
-- "contentful": Create a "services/contentful/" directory with a sample integration file using the official Contentful starter code.
-- "strapi": Create an "api/" directory with a basic sample API file using the official Strapi starter code.
-- "wordpress": Create a "services/wordpress/" directory with a sample integration file using the official WordPress starter code.
+### Backend Services:
+- firebase: config/firebase.js + services/firebase/ directory
+- supabase: config/supabase.js + services/supabase/ directory
+- appwrite: config/appwrite.js + services/appwrite/ directory
 
-### Authentication & API Handling (if specified)
-- For "Authentication" (Firebase, Supabase, Appwrite): Create an "auth/" directory with a sample authentication setup file following the respective official documentation.
-- For "API Integrations": Create a "services/api/" directory with a basic API service file.
+### CMS Integration:
+- sanity: studio/ directory + schemas/ directory
+- contentful: services/contentful/ directory
+- strapi: services/strapi/ directory
 
-### Payment Integration (if specified)
-- "stripe": Create a "services/stripe/" directory with a sample file that exports minimal Stripe configuration, including placeholders for API keys in .env.
-- "paypal": Create a "services/paypal/" directory with a basic integration file and include placeholders for API keys.
-- "lemonsqueezy": Create a "services/lemonsqueezy/" directory with a sample configuration file.
-- "razorpay": Create a "services/razorpay/" directory with a sample integration file.
+### Authentication:
+- firebase: auth/ directory with Firebase Auth setup
+- supabase: auth/ directory with Supabase Auth setup
+- appwrite: auth/ directory with Appwrite Auth setup
 
-### Monitoring & Analytics (if specified)
-- "Monitoring":
-  - "sentry": Include "sentry.client.config.js" and "sentry.server.config.js" with minimal Sentry configuration code from official docs.
-  - "logrocket": Create a "services/logrocket/" directory with a basic setup file.
-- "Analytics":
-  - "google-analytics": Create a "services/analytics/" directory with a sample integration file.
-  - "mixpanel": Create a "services/mixpanel/" directory with a sample integration file.
-  - "amplitude": Create a "services/amplitude/" directory with a sample integration file.
-  - "posthog": Create a "services/posthog/" directory with a sample integration file.
-  - "plausible": Create a "services/plausible/" directory with a sample integration file.
+### Payment Integration:
+- stripe: services/stripe/ directory + API routes
+- paypal: services/paypal/ directory + API routes
 
-### SEO & Deployment (if specified)
-- "SEO":
-  - "next-seo": Include a "next-seo.config.js" file with minimal configuration per official documentation using the official Next-SEO starter code.
-  - "react-helmet": Create a "components/seo/" directory with a sample component using React Helmet using the official React Helmet starter code.
-  - "vercel-analytics": Create a "services/analytics/" directory with a sample configuration file using the official Vercel Analytics starter code.
-- "Deployment":
-  - Generate configuration files for platforms like Vercel, Netlify, AWS, Railway, or Bun with minimal valid configurations based on their official docs using the official Vercel, Netlify, AWS, Railway, or Bun starter code.
+### Testing & Linting:
+- jest: __tests__/ directory + jest.config.js
+- vitest: tests/ directory + vitest.config.js
+- eslint: .eslintrc.js + .eslintignore
+- prettier: .prettierrc + .prettierignore
 
-### Additional Services
-- "Emailing" (Resend, SendGrid, Mailgun): Create a "services/email/" directory with a sample file for email integration using the official Resend, SendGrid, Mailgun starter code.
-- "SMS" (Twilio): Create a "services/sms/" directory with a sample file for SMS integration using the official Twilio starter code.
-- "Testing" (Jest, Vitest, Cypress): Create directories like "__tests__/" or "tests/" with a basic test file and include respective configuration files using the official Jest, Vitest, Cypress starter code.
-- "Linting" (ESLint, Prettier): Include configuration files (".eslintrc.js", ".prettierrc") with minimal valid configurations using the official ESLint, Prettier starter code.
+### Deployment:
+- vercel: vercel.json configuration
+- netlify: netlify.toml configuration
 
-### Environment & API Keys Handling
-- Generate a ".env.example" file containing placeholders for required API keys for services such as Firebase, Supabase, Appwrite, Stripe, PayPal, etc. using the official Firebase, Supabase, Appwrite, Stripe, PayPal starter code.
-- Ensure that sensitive information is never included in the repository.
+### Analytics & Monitoring:
+- google-analytics: services/analytics/ directory
+- sentry: sentry.client.config.js + sentry.server.config.js
+
+### Email Services:
+- resend: services/email/ directory + API routes
+- sendgrid: services/email/ directory + API routes
+
+### SEO:
+- next-seo: next-seo.config.js + metadata setup in layout.tsx
 
 Output Format:
-- Return ONLY the repository structure as a raw JSON object.
-- Do not wrap the JSON in code blocks or markdown.
-- Do not include any explanatory text.
-- The JSON should start with { and end with }.
-
-Example output format (without comments):
 {
-  "name": "\${dependencyGraph.projectName}",
+  "name": "\${dependencyGraph.projectName || 'nextjs-project'}",
   "type": "directory",
-  "children": [...]
+  "children": [
+    {
+      "name": "package.json",
+      "type": "file",
+      "content": "{\"name\": \"project-name\", \"scripts\": {...}, \"dependencies\": {...}}"
+    },
+    {
+      "name": "app",
+      "type": "directory",
+      "children": [...]
+    }
+  ]
 }
 
-Validation Checklist:
-1. Output is pure JSON without any markdown formatting.
-2. Maximum directory depth of 2.
-3. Only include explicitly defined dependencies and configurations.
-4. Include framework-specific directories with minimal sample code based on official documentation to prevent runtime errors.
-5. In package.json, include every dependency specified in the dependencyGraph with their latest stable version.
-6. Ensure that any sample code does not contain unescaped special characters (e.g., raw backticks) that could cause JSON syntax errors.
-7. Output is error-free and production-ready.
-8. Include a minimal configuration file for each service specified in the dependencyGraph.
+Validation Rules:
+1. Pure JSON output - no markdown or code blocks
+2. All file contents must be valid strings (escape quotes)
+3. Include only specified dependencies from dependencyGraph
+4. Each file should have minimal but functional code
+5. Configuration files should follow official documentation
+6. Environment variables should be in .env.example only
 
-Generate the repository structure as raw JSON only and make sure it is valid JSON otherwise it will break the code in that case rerun the code again and make sure it is valid JSON.
+Generate a clean, production-ready Next.js project structure that developers can immediately run with "npm install && npm run dev".
 `;
 
 export const getDependencySystemPrompt = (userPrompt) => `

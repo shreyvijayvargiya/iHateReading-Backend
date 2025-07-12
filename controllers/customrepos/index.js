@@ -1,6 +1,5 @@
-import admin from "firebase-admin";
 import { DirSchema, dependencyGraphSchema } from "./schema.js";
-import crypto from "crypto";
+
 import {
 	getUpdateSystemPrompt,
 	getDependencySystemPrompt,
@@ -10,6 +9,7 @@ import {
 } from "./systemPrompt.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { GoogleGenAI } from "@google/genai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatOllama } from "@langchain/ollama";
 import { PromptTemplate } from "@langchain/core/prompts";
@@ -25,6 +25,11 @@ const { chat, completions } = new OpenAI({
 	apiKey: process.env.OPENAI_API_KEY,
 });
 
+const googleGenAIClient = new GoogleGenAI({
+	model: "gemini-1.5-flash",
+	apiKey: process.env.GOOGLE_GENAI_API_KEY,
+});
+
 const deepSeekClient = new ChatOllama({
 	model: "deepseek-r1:8b",
 	temperature: 0.1,
@@ -37,7 +42,7 @@ const googleClient = new ChatGoogleGenerativeAI({
 	apiKey: process.env.GOOGLE_GENAI_API_KEY,
 });
 
-const saveVariantToFile = async (variantCode, variantId, format) => {
+const saveVariantToFile = async (variantCode, variantId) => {
 	try {
 		const __filename = fileURLToPath(import.meta.url);
 		const __dirname = path.dirname(__filename);
@@ -65,28 +70,73 @@ const sendSSEData = (res, data) => {
 	}
 };
 
+// Helper function to extract React code from LLM output
+const extractReactCode = (content) => {
+	// Remove markdown code blocks
+	let code = content
+		.replace(/```jsx?/g, "")
+		.replace(/```/g, "")
+		.replace(/```tsx?/g, "")
+		.trim();
+
+	// Remove any leading/trailing text that's not code
+	const lines = code.split("\n");
+	const codeLines = [];
+	let inCode = false;
+
+	for (const line of lines) {
+		if (
+			line.includes("import") ||
+			line.includes("export") ||
+			line.includes("function") ||
+			line.includes("const") ||
+			line.includes("return") ||
+			line.includes("(") ||
+			line.includes(")") ||
+			line.includes("<") ||
+			line.includes(">")
+		) {
+			inCode = true;
+		}
+		if (inCode) {
+			codeLines.push(line);
+		}
+	}
+
+	return codeLines.join("\n").trim();
+};
+
+const ollamaClient = new ChatOllama({
+	model: "codellama:7b",
+	temperature: 0.1,
+	baseUrl: "http://localhost:11434",
+	streaming: true,
+});
+
 export const generateCustomRepo = async (req, res) => {
 	try {
 		const { projectName, ...dependencyGraph } = req.body;
-		const dependencyGraphHash = JSON.stringify(dependencyGraph);
-		const uniqueHash = crypto
-			.createHash("sha256")
-			.update(dependencyGraphHash)
-			.digest("hex");
-		const isExists = false;
-		// const { isExists, repoStructure } = await checkRepositoryStatusApi(
-		// 	dependencyGraphHash
-		// );
+
+		if (!dependencyGraph || Object.keys(dependencyGraph).length === 0) {
+			return res.status(400).json({
+				error: "Dependency graph is required",
+			});
+		}
 
 		res.setHeader("Content-Type", "text/event-stream");
 		res.setHeader("Cache-Control", "no-cache");
 		res.setHeader("Connection", "keep-alive");
 
-		const sendEvent = (message) => {
-			res.write(`data: ${JSON.stringify({ message })}\n\n`);
+		const sendEvent = (data) => {
+			if (!res.finished) {
+				res.write(`data: ${JSON.stringify(data)}\n\n`);
+			}
 		};
 
-		sendEvent("Initializing repository generation...");
+		sendEvent({
+			type: "start",
+			message: "Initializing repository generation...",
+		});
 
 		const systemPrompt = getCustomRepoGeneratorSystemPrompt(dependencyGraph);
 		const messages = [
@@ -99,80 +149,93 @@ export const generateCustomRepo = async (req, res) => {
 				)}`
 			),
 		];
-		let gptResponse, inputTokens, outputTokens;
-		if (isExists) {
-			// gptResponse = repoStructure;
-		} else {
-			let gptResponse = "";
-			let thinking = "";
+		let gptResponse = "";
+		let inputTokens = 0;
+		let outputTokens = 0;
 
+		try {
+			// Convert LangChain messages to Google GenAI format
+			const genAIMessages = messages.map((msg) => ({
+				role: msg._getType() === "system" ? "user" : msg._getType(),
+				parts: [{ text: msg.content }],
+			}));
+
+			const model = googleGenAIClient.chats.create({
+				model: "gemini-1.5-flash",
+			});
+			const chat = model.startChat({
+				history: genAIMessages.slice(0, -1), // All messages except the last one
+				generationConfig: {
+					temperature: 0.1,
+					maxOutputTokens: 8192,
+				},
+			});
+
+			const result = await chat.sendMessage(
+				genAIMessages[genAIMessages.length - 1].parts[0].text
+			);
+			gptResponse = result.response.text();
+
+			// Try to parse the response as JSON
 			try {
-				for await (const chunk of await googleClient.stream(messages)) {
-					// const thinkMatch = chunk.content.match(/<think>(.*?)<\/think>/s);
-					// const thinking = thinkMatch ? thinkMatch[1] : '';
-					gptResponse += chunk.content;
-					sendEvent(chunk.content);
-				}
-				sendEvent("Repository generated successfully.");
-
-				// Calculate input tokens from the messages
-				inputTokens = await Promise.all(
-					messages.map((msg) => googleClient.getNumTokens(msg.content))
-				).then((tokens) => tokens.reduce((total, num) => total + num, 0));
-
-				// Calculate output tokens from the complete response
-				outputTokens = await googleClient.getNumTokens(gptResponse);
-
-				console.log(
-					`Input tokens: ${inputTokens}, Output tokens: ${outputTokens}`
+				const parsedStructure = JSON.parse(gptResponse);
+				sendEvent({
+					type: "complete",
+					repository: parsedStructure,
+					message: "Repository generated successfully!",
+				});
+			} catch (parseError) {
+				console.error(
+					"Failed to parse repository structure as JSON:",
+					parseError
 				);
-
-				// await admin
-				// 	.firestore()
-				// 	.collection("repos")
-				// 	.doc(uniqueHash)
-				// 	.set(
-				// 		{
-				// 			dependencyGraph,
-				// 			createdAt: admin.firestore.Timestamp.now(),
-				// 			updatedAt: admin.firestore.Timestamp.now(),
-				// 			repoStructure: JSON.stringify(cleanedResponse),
-				// 			totalTokens: inputTokens + outputTokens,
-				// 		},
-				// 		{ merge: true }
-				// 	);
-
-				// Validate the cleaned JSON response
-				// const validated = DirSchema.parse(JSON.parse(cleanedResponse));
-				console.log(gptResponse, "gptResponse");
-
-				// Send final data through SSE instead of res.send()
 				sendEvent({
-					data: gptResponse,
-					inputTokens,
-					outputTokens,
-					status: "complete",
+					type: "error",
+					message: "Generated structure is not valid JSON. Please try again.",
+					rawResponse: gptResponse,
 				});
-
-				// End the response stream
-				res.end();
-			} catch (validationError) {
-				sendEvent({
-					error: "Error during validation.",
-					status: "error",
-				});
-				res.end();
-				throw validationError;
 			}
+
+			console.log(gptResponse, "gptResponse");
+
+			// Calculate input tokens from the messages
+			inputTokens = await Promise.all(
+				messages.map((msg) => googleClient.getNumTokens(msg.content))
+			).then((tokens) => tokens.reduce((total, num) => total + num, 0));
+
+			// Calculate output tokens from the complete response
+			outputTokens = await googleClient.getNumTokens(gptResponse);
+
+			console.log(
+				`Input tokens: ${inputTokens}, Output tokens: ${outputTokens}`
+			);
+
+			// End the response stream
+			res.end();
+		} catch (validationError) {
+			console.error("Error in generating custom repo:", validationError);
+			sendEvent({
+				type: "error",
+				message: "Failed to generate repository structure",
+				details: validationError.message,
+			});
+		}
+
+		if (!res.finished) {
+			res.end();
 		}
 	} catch (error) {
-		console.error("Error in generating custom repo:", error);
-		res.write(
-			`data: ${JSON.stringify({
-				error: "Error in generating custom repo",
-			})}\n\n`
-		);
-		res.end();
+		console.error("Error in generateCustomRepo:", error);
+		if (!res.finished) {
+			res.write(
+				`data: ${JSON.stringify({
+					type: "error",
+					message: "Error in generating custom repo",
+					details: error.message,
+				})}\n\n`
+			);
+			res.end();
+		}
 	}
 };
 
@@ -772,9 +835,12 @@ export const summarizeBlogContent = async (req, res) => {
 
 		// Start the deepSeekClient stream
 		const stream = await deepSeekClient.stream([
-			new HumanMessage(`Please summarize the following programming-related article content in 500 words. 
-				Make sure to handle images, links, and videos appropriately. Here is the content: ${textContent}`),
-			new SystemMessage("Provide a concise summary while reading blog content"),
+			new HumanMessage(
+				`Make sure to include the links as well in the summary if needed. Blog content provided by the user: ${textContent}`
+			),
+			new SystemMessage(
+				`Provide a concise summary while for the blog content: ${textContent}`
+			),
 		]);
 
 		// Process the stream using a single async function
@@ -924,175 +990,5 @@ export const generateFlashCards = async (req, res) => {
 	} catch (error) {
 		console.error("Error generating flashcards:", error);
 		res.status(500).json({ error: "Failed to generate flashcards" });
-	}
-};
-
-export const generateLandingPageApi = async (req, res) => {
-	try {
-		const { prompt } = req.body;
-
-		if (!prompt) {
-			return res.status(400).json({ error: "Prompt is required" });
-		}
-
-		// Set headers for streaming response
-		res.setHeader("Content-Type", "text/event-stream");
-		res.setHeader("Cache-Control", "no-cache");
-		res.setHeader("Connection", "keep-alive");
-
-		// Send initial message
-		sendSSEData(res, {
-			type: "start",
-			message: "Starting landing page generation...",
-		});
-
-		// Create a system message for the landing page generation
-		const systemMessage = `You are an expert frontend developer. Generate a complete, production-ready React component for a landing page using Tailwind CSS. The landing page should include:
-1. A Hero Section with:
-   - A bold headline and subheadline
-   - A call-to-action button
-   - A background image or gradient
-2. A Features Section with:
-   - 3-4 key features
-   - Icons or illustrations
-3. A Testimonials Section
-4. A Contact Section
-5. A Footer
-
-Ensure that:
-- All images and icons are represented by placeholder elements styled using Tailwind CSS
-- The code is written in JSX and is fully self-contained
-- Proper spacing, formatting, and indentation are used
-- The component is responsive and mobile-friendly
-- Include dark mode support
-- Use modern React practices (hooks, functional components)
-- Include proper TypeScript types if specified`;
-
-		// Stream the response using the existing DeepSeek client
-		const stream = await deepSeekClient.stream([
-			new SystemMessage(systemMessage),
-			new HumanMessage(`Create a landing page for: ${prompt}`),
-		]);
-
-		let generatedCode = "";
-
-		for await (const chunk of stream) {
-			if (res.finished) break;
-
-			// Clean the output to extract only the code
-			const cleanedContent = cleanLLMOutput(chunk.content);
-			if (cleanedContent) {
-				generatedCode += cleanedContent;
-				sendSSEData(res, {
-					type: "chunk",
-					content: cleanedContent,
-				});
-			}
-		}
-
-		// Send completion message
-		sendSSEData(res, {
-			type: "complete",
-			code: generatedCode,
-		});
-
-		res.end();
-	} catch (error) {
-		console.error("Error generating landing page:", error);
-		if (!res.finished) {
-			sendSSEData(res, {
-				type: "error",
-				error: "Failed to generate landing page",
-				message: error.message,
-			});
-			res.end();
-		}
-	}
-};
-
-export const updateShuffleApi = async (req, res) => {
-	try {
-		const { code } = req.body;
-
-		if (!code) {
-			return res.status(400).json({ error: "code is required" });
-		}
-
-		// Set headers for streaming response
-		res.setHeader("Content-Type", "text/event-stream");
-		res.setHeader("Cache-Control", "no-cache");
-		res.setHeader("Connection", "keep-alive");
-
-		// Send initial message
-		sendSSEData(res, {
-			type: "start",
-			message: "Starting theme shuffle...",
-		});
-
-		// System message for theme modification
-		const systemMessage = `You are an expert frontend developer specialized in theme design. Your task is to update the visual theme, colors, and styles of an existing React component using Tailwind CSS WITHOUT changing its structure or functionality. Preserve all components, layout, and logic. Only modify Tailwind classes to:
-			1. Change color schemes (primary, secondary, accent colors)
-			2. Update gradients and background styles
-			3. Adjust text styles (font weights, sizes where appropriate)
-			4. Modify spacing and decorative elements
-			5. Enhance dark mode support
-			6. Improve visual hierarchy through color contrast
-			7. Update hover/focus states styling
-			Keep all JSX structure intact. Use modern Tailwind features and ensure responsive design. Output ONLY the modified code with no explanations.`;
-
-		// Stream the response using the DeepSeek client
-		const stream = await deepSeekClient.stream([
-			new SystemMessage(systemMessage),
-			new HumanMessage(
-				`Update the theme and styling of this React component: ${code}`
-			),
-		]);
-
-		let modifiedCode = "";
-		let isCodeBlock = false;
-
-		for await (const chunk of stream) {
-			if (res.finished) break;
-
-			const cleanedContent = cleanLLMOutput(chunk.content);
-
-			if (cleanedContent) {
-				// Detect code block boundaries
-				if (cleanedContent.includes("```")) {
-					if (isCodeBlock) {
-						isCodeBlock = false;
-						continue;
-					}
-					isCodeBlock = true;
-					continue;
-				}
-
-				if (isCodeBlock) {
-					modifiedCode += cleanedContent;
-					sendSSEData(res, {
-						type: "chunk",
-						content: cleanedContent,
-					});
-				}
-			}
-		}
-
-		// Send completion message
-		sendSSEData(res, {
-			type: "complete",
-			code: modifiedCode,
-		});
-
-		res.end();
-	} catch (error) {
-		console.error("Error shuffling theme:", error);
-		if (!res.finished) {
-			sendSSEData(res, {
-				type: "error",
-				error: "Failed to shuffle theme",
-				message: error.message,
-			});
-			res.end();
-		}
 	}
 };

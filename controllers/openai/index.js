@@ -78,7 +78,6 @@ export const getYogaPostureImageFromUnSplash = async (req, res) => {
 	res.send(output);
 };
 
-
 const openai = new OpenAI({
 	apiKey: process.env.OPENAI_TOKEN,
 });
@@ -252,7 +251,6 @@ export const aiGenKit = async (req, res) => {
 		res.send("Error");
 	}
 };
-
 
 const extractLinks = (html) => {
 	const $ = load(html);
@@ -484,4 +482,79 @@ export const createRepo = async (req, res) => {
 			message: "Error generating repository",
 		});
 	}
+};
+
+export const convertDataToMarkdown = (blocks) => {
+	let markdown = "";
+
+	if (blocks !== undefined && blocks !== null) {
+		blocks?.forEach((block) => {
+			switch (block.type) {
+				case "header":
+					// Add # based on level
+					const hashes = "#".repeat(block.data.level);
+					markdown += `${hashes} ${block.data.text}\n\n`;
+					break;
+
+				case "paragraph":
+					markdown += `${block.data.text}\n\n`;
+					break;
+
+				case "list":
+					if (block.data.style === "ordered") {
+						block.data.items.forEach((item, index) => {
+							markdown += `${index + 1}. ${item}\n`;
+						});
+					} else {
+						block.data.items.forEach((item) => {
+							markdown += `- ${item}\n`;
+						});
+					}
+					markdown += "\n";
+					break;
+
+				case "image":
+					markdown += `![${block.data.caption}](${block.data.file.url})\n\n`;
+					break;
+
+				case "delimiter":
+					markdown += "---\n\n";
+					break;
+
+				case "code":
+					markdown += "```\n" + block.data.code + "\n```\n\n";
+					break;
+
+				case "embed":
+					markdown += `[Embedded Content](${block.data.embed})\n\n`;
+					break;
+
+				case "checklist":
+					block.data.items.forEach((item) => {
+						const checkbox = item.checked ? "[x]" : "[ ]";
+						markdown += `${checkbox} ${item.text}\n`;
+					});
+					markdown += "\n";
+					break;
+
+				case "hyperlink":
+				case "link":
+					markdown += `[${block.data.text}](${block.data.link})\n\n`;
+					break;
+
+				case "gist":
+					markdown += `[Gist](${block.data.gistLink})\n\n`;
+					break;
+
+				case "button":
+					markdown += `[${block.data.text}](${block.data.link})\n\n`;
+					break;
+
+				default:
+					console.log("Unknown block type", block);
+					break;
+			}
+		});
+	}
+	return markdown;
 };

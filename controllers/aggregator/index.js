@@ -7,6 +7,10 @@ import { createApi } from "unsplash-js";
 import { OpenAI } from "openai";
 import { encode } from "base64-arraybuffer";
 import admin from "firebase-admin";
+import path from "path";
+import { fileURLToPath } from "url";
+import { GoogleGenAI } from "@google/genai";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
 const openai = new OpenAI({
 	apiKey: process.env.OPENAI_TOKEN,
@@ -15,6 +19,11 @@ const openai = new OpenAI({
 const unsplashRoute = createApi({
 	accessKey: process.env.unsplash_key,
 	fetch: axios,
+});
+
+// Initialize Google GenAI client
+const googleGenAIClient = new GoogleGenAI({
+	apiKey: process.env.GOOGLE_GENAI_API_KEY,
 });
 
 export const searchOnUnsplash = async (data) => {
@@ -310,5 +319,391 @@ export const getJobsPortals = async (req, res) => {
 	} catch (e) {
 		console.log(e, "error");
 		res.status(500).send("Error");
+	}
+};
+
+// Assumes GOOGLE_GENAI_API_KEY is set in env
+const googleClient = new ChatGoogleGenerativeAI({
+	model: "gemini-1.5-flash",
+	apiKey: process.env.GOOGLE_GENAI_API_KEY,
+});
+export const fetchAndSummarizeArticles = async (req, res) => {
+	try {
+		const db = admin.firestore();
+		const articlesSnapshot = await db
+			.collection("publish")
+			.orderBy("timeStamp", "desc")
+			.limit(10)
+			.get();
+
+		const articles = [];
+		const noSummaryArticles = [];
+		articlesSnapshot.docs.forEach(async (doc) => {
+			const data = doc.data();
+			if (data.summary) {
+				articles.push({
+					id: doc.id,
+					title: data.title || "",
+					description: data.description || "",
+					summary: data.summary || "",
+				});
+			}
+		});
+
+		// Prepare content for llms.txt
+		const content = articles
+			.map(
+				(a) =>
+					`ID: ${a.id}\nTitle: ${a.title}\nDescription: ${a.description}\nSummary: ${a.summary}\n`
+			)
+			.join("\n----------------------\n");
+			
+		// Save to llms.txt in a safe directory
+		const __filename = fileURLToPath(import.meta.url);
+		const __dirname = path.dirname(__filename);
+		const filePath = path.join(__dirname, "../../llms.txt");
+		await fs.promises.writeFile(filePath, content, "utf8");
+
+		// create summary for non summarised articles and finally store inside firestore and return in the LLM.txt
+
+		res.json({
+			message: "Articles fetched and saved to llms.txt",
+			noSummaryArticles,
+			filePath,
+		});
+	} catch (e) {
+		console.error(e, "error in fetchAndSummarizeArticles");
+		res.status(500).send("Error fetching and summarizing articles");
+	}
+};
+
+/**
+ * Dedicated method to update summary for a specific document
+ * @param {string} docId - The document ID to update
+ * @returns {Promise<Object>} - Returns the updated document data
+ */
+export const updateArticleSummary = async (req, res) => {
+	try {
+		const { docId } = req.params;
+
+		if (!docId) {
+			return res.status(400).json({ error: "Document ID is required" });
+		}
+
+		const db = admin.firestore();
+		const docRef = db.collection("publish").doc(docId);
+		const docSnapshot = await docRef.get();
+
+		if (!docSnapshot.exists) {
+			return res.status(404).json({ error: "Document not found" });
+		}
+
+		const data = docSnapshot.data();
+
+		// Check if summary already exists
+		if (data.summary) {
+			return res.json({
+				message: "Summary already exists",
+				docId,
+				summary: data.summary,
+			});
+		}
+
+		// Check if content exists for summarization
+		if (!data.content) {
+			return res.status(400).json({
+				error: "No content available for summarization",
+				docId,
+			});
+		}
+
+		// Generate summary using Google GenAI
+		const prompt = `Summarize the following article in a concise and informative way: ${data.content}`;
+
+		const result = await googleClient.invoke(prompt);
+		const summary = result.content;
+
+		// Update the document with the generated summary
+		await docRef.update(
+			{
+				summary: summary || "",
+				summaryUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+			},
+			{ merge: true }
+		);
+
+		// Get the updated document
+		const updatedDoc = await docRef.get();
+		const updatedData = updatedDoc.data();
+
+		res.json({
+			message: "Summary updated successfully",
+			docId,
+			title: updatedData.title || "",
+			description: updatedData.description || "",
+			summary: updatedData.summary || "",
+			summaryUpdatedAt: updatedData.summaryUpdatedAt,
+		});
+	} catch (error) {
+		console.error("Error updating article summary:", error);
+		res.status(500).json({
+			error: "Failed to update article summary",
+			message: error.message,
+		});
+	}
+};
+
+/**
+ * Batch update summaries for multiple documents
+ * @param {Array} docIds - Array of document IDs to update
+ * @returns {Promise<Object>} - Returns the results of batch update
+ */
+export const batchUpdateArticleSummaries = async (req, res) => {
+	try {
+		const db = admin.firestore();
+		const results = {
+			successful: [],
+			failed: [],
+		};
+
+		// Query Firestore for documents in "publish" collection
+		// Use a simpler query to avoid index requirements
+		const querySnapshot = await db
+			.collection("publish")
+			.orderBy("timeStamp", "desc")
+			.limit(100) // Limit to avoid overwhelming the system
+			.get();
+
+		const docsToUpdate = [];
+		querySnapshot.forEach((doc) => {
+			const data = doc.data();
+			// Only include if content is present and summary is missing
+			if (
+				data.content &&
+				typeof data.content === "string" &&
+				data.content.trim().length > 0 &&
+				(!data.summary || data.summary.trim().length === 0)
+			) {
+				docsToUpdate.push({ docId: doc.id, data });
+			}
+		});
+
+		if (docsToUpdate.length === 0) {
+			return res.json({
+				message: "No documents found that require summary generation.",
+				totalProcessed: 0,
+				successful: 0,
+				failed: 0,
+			});
+		}
+
+		// Process documents in batches to avoid overwhelming the API
+		const batchSize = 5;
+		for (let i = 0; i < docsToUpdate.length; i += batchSize) {
+			const batch = docsToUpdate.slice(i, i + batchSize);
+
+			await Promise.all(
+				batch.map(async ({ docId, data }) => {
+					try {
+						const docRef = db.collection("publish").doc(docId);
+
+						// Generate summary
+						const prompt = `Summarize the following article in a concise and informative way: ${data.content}`;
+						const result = await googleClient.invoke(prompt);
+						const summary = result.content;
+
+						// Update document
+						await docRef.update(
+							{
+								summary: summary || "",
+								summaryUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+							},
+							{ merge: true }
+						);
+
+						results.successful.push({
+							docId,
+							title: data.title || "",
+							summary: summary || "",
+						});
+					} catch (error) {
+						console.error(`Error processing document ${docId}:`, error);
+						results.failed.push({
+							docId,
+							error: error.message,
+						});
+					}
+				})
+			);
+
+			// Add a small delay between batches to avoid rate limiting
+			if (i + batchSize < docsToUpdate.length) {
+				await new Promise((resolve) => setTimeout(resolve, 1000));
+			}
+		}
+
+		res.json({
+			message: "Batch summary update completed",
+			results,
+			totalProcessed: docsToUpdate.length,
+			successful: results.successful.length,
+			failed: results.failed.length,
+		});
+	} catch (error) {
+		console.error("Error in batch update:", error);
+		res.status(500).json({
+			error: "Failed to perform batch summary update",
+			message: error.message,
+		});
+	}
+};
+
+/**
+ * Alternative batch update method that handles documents without summaries
+ * This method is more efficient and doesn't require complex indexes
+ */
+export const updateMissingSummaries = async (req, res) => {
+	try {
+		const db = admin.firestore();
+		const results = {
+			successful: [],
+			failed: [],
+			skipped: [],
+		};
+
+		// Get all documents and filter in memory to avoid index requirements
+		const querySnapshot = await db
+			.collection("publish")
+			.orderBy("timeStamp", "desc")
+			.limit(200) // Increased limit for better coverage
+			.get();
+
+		const docsToUpdate = [];
+		querySnapshot.forEach((doc) => {
+			const data = doc.data();
+			// Check if document needs summary update
+			if (
+				data.content &&
+				typeof data.content === "string" &&
+				data.content.trim().length > 0
+			) {
+				// Check if summary is missing or empty
+				if (!data.summary || data.summary.trim().length === 0) {
+					docsToUpdate.push({ docId: doc.id, data });
+				} else {
+					results.skipped.push({
+						docId: doc.id,
+						title: data.title || "",
+						reason: "Summary already exists",
+					});
+				}
+			} else {
+				results.skipped.push({
+					docId: doc.id,
+					title: data.title || "",
+					reason: "No content available",
+				});
+			}
+		});
+
+		if (docsToUpdate.length === 0) {
+			return res.json({
+				message: "No documents found that require summary generation.",
+				totalProcessed: 0,
+				successful: 0,
+				failed: 0,
+				skipped: results.skipped.length,
+				results,
+			});
+		}
+
+		console.log(
+			`Found ${docsToUpdate.length} documents that need summary updates`
+		);
+
+		// Process documents in smaller batches for better control
+		const batchSize = 3; // Reduced batch size for better stability
+		for (let i = 0; i < docsToUpdate.length; i += batchSize) {
+			const batch = docsToUpdate.slice(i, i + batchSize);
+			console.log(
+				`Processing batch ${Math.floor(i / batchSize) + 1} of ${Math.ceil(
+					docsToUpdate.length / batchSize
+				)}`
+			);
+
+			await Promise.all(
+				batch.map(async ({ docId, data }) => {
+					try {
+						const docRef = db.collection("publish").doc(docId);
+
+						// Create a more specific prompt for better summaries
+						const prompt = `Please provide a concise and informative summary of the following article. Focus on the main points and key insights:
+
+Article Content:
+${data.content}
+
+Summary:`;
+
+						const result = await googleClient.invoke(prompt);
+						const summary = result.content;
+
+						// Update document with summary
+						await docRef.update(
+							{
+								summary: summary || "",
+								summaryUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+								summaryGenerated: true,
+							},
+							{ merge: true }
+						);
+
+						results.successful.push({
+							docId,
+							title: data.title || "",
+							summary: summary || "",
+							contentLength: data.content.length,
+						});
+
+						console.log(`Successfully updated summary for document: ${docId}`);
+					} catch (error) {
+						console.error(`Error processing document ${docId}:`, error);
+						results.failed.push({
+							docId,
+							title: data.title || "",
+							error: error.message,
+						});
+					}
+				})
+			);
+
+			// Longer delay between batches to avoid rate limiting
+			if (i + batchSize < docsToUpdate.length) {
+				console.log("Waiting 2 seconds before next batch...");
+				await new Promise((resolve) => setTimeout(resolve, 2000));
+			}
+		}
+
+		res.json({
+			message: "Missing summaries update completed",
+			results,
+			totalProcessed: docsToUpdate.length,
+			successful: results.successful.length,
+			failed: results.failed.length,
+			skipped: results.skipped.length,
+			summary: {
+				totalDocuments: querySnapshot.size,
+				neededUpdates: docsToUpdate.length,
+				successRate: `${(
+					(results.successful.length / docsToUpdate.length) *
+					100
+				).toFixed(2)}%`,
+			},
+		});
+	} catch (error) {
+		console.error("Error in missing summaries update:", error);
+		res.status(500).json({
+			error: "Failed to update missing summaries",
+			message: error.message,
+		});
 	}
 };

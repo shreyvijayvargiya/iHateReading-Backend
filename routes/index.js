@@ -26,6 +26,7 @@ import {
 	latestTemplates,
 } from "../controllers/templates/index.js";
 import {
+	convertDataToHtml,
 	createRepo,
 	getAllYogaAsanas,
 	getAllYogaPoses,
@@ -46,6 +47,9 @@ import {
 	getNewsFeeds,
 	getSingleChannelFeeds,
 	getJobsPortals,
+	fetchAndSummarizeArticles,
+	updateArticleSummary,
+	batchUpdateArticleSummaries,
 } from "../controllers/aggregator/index.js";
 import { resumeBuildingWebsite } from "../controllers/findjobsportals/index.js";
 import {
@@ -58,8 +62,6 @@ import {
 	summarizeBlogContent,
 	updateCustomRepo,
 	generateFlashCards,
-	generateLandingPageApi,
-	updateShuffleApi,
 } from "../controllers/customrepos/index.js";
 import { payViaLemonSquezy } from "../controllers/payments/index.js";
 
@@ -163,35 +165,39 @@ router.post(
 	checkNewsWebsiteAndAddInSupabase
 );
 router.get("/v1/api/getJobPortals", getJobsPortals);
+router.get("/v1/api/fetchAndSummarizeArticles", fetchAndSummarizeArticles);
+
+// Summary update APIs
+router.put("/v1/api/update-article-summary/:docId", updateArticleSummary);
+router.get(
+	"/v1/api/batch-update-article-summaries",
+	batchUpdateArticleSummaries
+);
 
 // find jobs portals APIs
 router.post("/v1/api/resume-build-websites", resumeBuildingWebsite);
 
 // Data migration API
 router.get("/v1/api/migrate-data", async (req, res) => {
-	const snapshot = await admin.firestore().collection("CustomRepos").get();
-	const batch = admin.firestore().batch();
+	try {
+		const db = await admin
+			.firestore()
+			.collection("mini-saas")
+			.orderBy("timeStamp", "desc")
+			.get();
 
-	snapshot.forEach(async (doc) => {
-		const data = doc.data();
+		const results = db.docs.map((doc) => {
+			return {
+				subject: doc.data().subject,
+				createdAt: doc.data().createdAt,
+			};
+		});
 
-		if (data.demoLink && data.demoLink.includes("/projects/")) {
-			const name = data.demoLink.split("/")[1];
-			const newDemoLink = `custom-components/${name}`;
-			console.log(newDemoLink, "new demo link");
-			// const docRef = await admin.firestore().collection('CustomRepos').doc(doc.id);
-			// batch.update(docRef, { demoLink: newDemoLink });
-		}
-	});
-
-	await batch.commit();
-	res.send("Done");
-
-	// res.send("Data migration completed");
+		res.send(results);
+	} catch (error) {
+		console.error("Migration error:", error);
+		res.status(500).send({ error: "Migration failed" });
+	}
 });
-
-// Landing page generation API
-router.post("/v1/api/generate-landing-page", generateLandingPageApi);
-router.post("/v1/api/shuffle-theme", updateShuffleApi);
 
 export default router;
